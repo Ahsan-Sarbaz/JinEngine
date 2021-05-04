@@ -10,7 +10,7 @@ int main()
     config.windowConfig.height = 600;
     config.windowConfig.title = "Sokuban";
     config.windowConfig.vsync = 1;
-    config.windowConfig.fullscreen = 0;
+    config.windowConfig.fullscreen = 1;
     config.opengl_version_major = 3;
     config.opengl_version_minor = 3;
 

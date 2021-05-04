@@ -59,12 +59,12 @@ void MainLayerUpdate(Application* app)
         }
     }
 
-    glm::mat4 model = glm::identity<glm::mat4>();
-    glm::mat4 view = glm::identity<glm::mat4>();
-    glm::mat4 proj = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, 0.0f, 1.0f);
-    SetUniformMatrix4(program, "model", (Matrix4)model);
-    SetUniformMatrix4(program, "view", (Matrix4)view);
-    SetUniformMatrix4(program, "proj", (Matrix4)proj);
+    m4 model = CreateIdentityMatrix4();
+    m4 view = CreateIdentityMatrix4();
+    m4 proj = CreateOrthographicProjectionMatrix4(0.0f, (float)app->window->config.width, (float)app->window->config.height, 0.0f, 0.0f, 1.0f);
+    SetUniformMatrix4(program, "model", model);
+    SetUniformMatrix4(program, "view", view);
+    SetUniformMatrix4(program, "proj", proj);
 
     UseShaderProgram(program);
     DrawCurrentBatch();

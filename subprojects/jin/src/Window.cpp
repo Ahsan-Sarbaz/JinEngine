@@ -13,7 +13,14 @@ Window* CreateWindow(const WindowConfiguration& config)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, config.gl_contex_version_minor);
     if(config.enable_context_core_profile)
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    window->handle = glfwCreateWindow(config.width, config.height, config.title, 0, 0);
+
+    if(config.fullscreen)
+    {
+        window->monitor = glfwGetPrimaryMonitor();
+        glfwGetMonitorWorkarea(window->monitor,0,0, &window->config.width, &window->config.height);
+    }
+    
+    window->handle = glfwCreateWindow(window->config.width, window->config.height, window->config.title, window->monitor, 0);
     if(window->handle == nullptr)
     {
         return nullptr;

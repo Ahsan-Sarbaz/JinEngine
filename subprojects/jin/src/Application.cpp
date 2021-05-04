@@ -59,7 +59,11 @@ Application* CreateApplication(const ApplicationConfiguration& config)
     glfwSetWindowUserPointer(app->window->handle, app);
     glfwSetFramebufferSizeCallback(app->window->handle, glfw_window_framebuffer_resize);
 
-    LOG_INFO("Created Window Successfuly %dx%d : %s\n", config.windowConfig.width, config.windowConfig.height, config.windowConfig.title);
+    /// update the window size if the window creation changed it
+    app->config.windowConfig.width = app->window->config.width;
+    app->config.windowConfig.height = app->window->config.height;
+
+    LOG_INFO("Created Window Successfuly %dx%d : %s\n", app->config.windowConfig.width, app->config.windowConfig.height, app->config.windowConfig.title);
     if(glewInit() != GLEW_OK)
     {
         LOG_FATAL("GLEW INIT Failed Cannot Continue!\n");

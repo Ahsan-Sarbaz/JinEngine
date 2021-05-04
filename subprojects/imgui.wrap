@@ -1,0 +1,5 @@
+[wrap-file]
+directory = imgui
+
+[provide]
+imgui = imgui_dep

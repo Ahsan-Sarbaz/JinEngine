@@ -1,0 +1,5 @@
+[wrap-file]
+directory = jin
+
+[provide]
+jin = jin_dep

@@ -1,0 +1,2 @@
+option('opengl', type : 'feature', value : 'auto')
+option('glfw', type : 'feature', value : 'auto')

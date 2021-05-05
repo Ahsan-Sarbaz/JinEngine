@@ -24,6 +24,7 @@ const u32 map[8][8] = {
 vec2 playerPos = {1,1};
 
 ShaderProgram* program;
+Texture* texture;
 
 void MainLayerStart(Application* app)
 {
@@ -39,6 +40,7 @@ void MainLayerStart(Application* app)
     }
 
     program = CreateShaderProgramFromVFShaderPath("res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
+    texture = CreateTexture("res/textures/test.png");
 }
 
 void MainLayerUpdate(Application* app)
@@ -74,6 +76,7 @@ void MainLayerUpdate(Application* app)
 void MainLayerEnd(Application* app)
 {
     DeleteShaderProgram(program);
+    DeleteTexture(texture);
 }
 
 Layer* GetMainLayer(Application* app)

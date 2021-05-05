@@ -19,6 +19,8 @@ sources += 'src/ShaderProgram.cpp'
 sources += 'src/VertexArrayObject.cpp'
 sources += 'src/VertexBufferObject.cpp'
 sources += 'src/IndexBufferObject.cpp'
+sources += 'src/stb_image.cpp'
+sources += 'src/Texture.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')

@@ -61,6 +61,9 @@ const char* MemoryTagToString(MEMORY_TAG tag)
         case MEMORY_TAG_BATCH_RENDERER_BUFFER:
             return "BATCH RENDERER BUFFER";
         break;
+        case MEMORY_TAG_TEXTURE_BUFFER:
+            return "TEXTURE BUFFER";
+        break;
         //just here for the warning
         case MEMORY_TAG_COUNT:
         break;

@@ -8,3 +8,4 @@
 #include "Renderer.h"
 #include "Shader.h"
 #include "ShaderProgram.h"
+#include "Texture.h"

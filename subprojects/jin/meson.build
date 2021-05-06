@@ -24,6 +24,8 @@ sources += 'src/IndexBufferObject.cpp'
 sources += 'src/stb_image.cpp'
 sources += 'src/Texture.cpp'
 sources += 'src/SpriteSheet.cpp'
+sources += 'src/SpriteSheetAnimation.cpp'
+sources += 'src/Time.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')
@@ -33,7 +35,7 @@ imgui_dep = imgui.get_variable('imgui_dep')
 
 args = []
 args+='-g'
-args+='-O2'
+args+='-O0'
 args+='-Wno-everything'
 
 

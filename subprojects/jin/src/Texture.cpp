@@ -14,10 +14,10 @@ Texture* CreateTexture(const char* path)
 
     Texture* texture = CreateTextureFromBuffer(buffer, width, height, channels);
     texture->name = path;
-    if(success)
-    {
-        LOG_INFO("Loaded Texture %s Successfully %dx%dx%d\n", path, texture->width, texture->height, texture->channels);
-    }
+    // if(success)
+    // {
+    //     LOG_INFO("Loaded Texture %s Successfully %dx%dx%d\n", path, texture->width, texture->height, texture->channels);
+    // }
 
     FreeTextureBuffer(&buffer, size);
     return texture;

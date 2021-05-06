@@ -3,6 +3,7 @@
 #include "Memory.h"
 #include "Logger.h"
 #include "Renderer.h"
+#include "Time.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -33,7 +34,11 @@ Application* CreateApplication(const ApplicationConfiguration& config)
 {
     Application* app = (Application*)MemAlloc(sizeof(Application), MEMORY_TAG_STRUCT);
     app->config = config;
-    
+
+    auto time = GetTimeInternal();
+    *time = new Time;
+    (*time)->time_scale = 1;
+
     glfwSetErrorCallback(glfw_error_callback);
 
     if(glfwInit() != GLFW_TRUE)
@@ -131,8 +136,21 @@ void RunApplication(Application* app)
         app->layers[i - 1]->config.onStart(app);
     }
 
+    double current_time = glfwGetTime();
+    double prev_time = glfwGetTime();
+    double delta_time = current_time - prev_time;
+    
+    auto time = GetTimeInternal();
+
     while (!glfwWindowShouldClose(app->window->handle))
     {
+        current_time = glfwGetTime();
+        delta_time = (current_time - prev_time);
+        prev_time = current_time;
+        (*time)->time_since_start += delta_time;
+        (*time)->delta_time = (delta_time * (*time)->time_scale) * 1000.0;
+        (*time)->delta_time_ms = (delta_time * (*time)->time_scale);
+
         glfwPollEvents();
         
         if(glfwGetKey(app->window->handle, GLFW_KEY_ESCAPE) == GLFW_PRESS)

@@ -18,7 +18,7 @@ sokuban_inc_dir = include_directories(['include'])
 
 args = []
 args+='-g'
-args+='-O2'
+args+='-O0'
 args+='-Wno-everything'
 
 executable('sokuban', sokubak_src, include_directories: sokuban_inc_dir, dependencies: [imgui_dep, jin_dep], cpp_args: args)

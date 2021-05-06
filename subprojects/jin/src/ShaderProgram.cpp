@@ -88,10 +88,20 @@ void UseShaderProgram(ShaderProgram* program)
     glUseProgram(program->id);
 }
 
-void SetUnifromInt(ShaderProgram* program, const char* name, int x)
+i32 GetUniformLocation(ShaderProgram* program, const char* name)
+{
+    return glGetUniformLocation(program->id, name);
+}
+
+void SetUnifromInt(ShaderProgram* program, const char* name, i32 x)
 {
     auto location = glGetUniformLocation(program->id, name);
     glUniform1i(location, x);
+}
+void SetUnifromIntArray(ShaderProgram* program, const char* name, i32* x, i32 count)
+{
+    auto location = glGetUniformLocation(program->id, name);
+    glUniform1iv(location, count, x);
 }
 
 void SetUnifromFloat(ShaderProgram* program, const char* name, float x)

@@ -7,11 +7,15 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#define ENABLE_IMGUI 1
+
+#if ENABLE_IMGUI
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
+#endif
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -72,7 +76,9 @@ Application* CreateApplication(const ApplicationConfiguration& config)
 
     LOG_INFO("GLEW INIT SUCCESS! USING RENDERER: %s\n", glGetString(GL_RENDERER));
     LOG_INFO("OpenGL Version: %s\n", glGetString(GL_VERSION));
-        
+
+#if ENABLE_IMGUI
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -82,6 +88,7 @@ Application* CreateApplication(const ApplicationConfiguration& config)
     ImGui_ImplGlfw_InitForOpenGL(app->window->handle, true);
     const char* glsl_version = "#version 130";
     ImGui_ImplOpenGL3_Init(glsl_version);
+#endif
 
     RendererConfiguration rendererConfig = {};
     rendererConfig.app = app;
@@ -112,7 +119,10 @@ void DeleteApplication(Application* app)
 void RunApplication(Application* app)
 {
     glClearColor(0, 0, 0, 1);
+
+#if ENABLE_IMGUI
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+#endif
 
     for(int i = app->layersCount; i > 0; --i)
     {
@@ -133,14 +143,19 @@ void RunApplication(Application* app)
         glViewport(0, 0, app->config.windowConfig.width, app->config.windowConfig.height);
         glClear(GL_COLOR_BUFFER_BIT);
     
+#if ENABLE_IMGUI
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+#endif
 
         for(int i = app->layersCount; i > 0; --i)
         {
             app->layers[i - 1]->config.onUpdate(app);
         }
+
+#if ENABLE_IMGUI
 
         if(ImGui::Begin("Debug"))
         {
@@ -185,7 +200,8 @@ void RunApplication(Application* app)
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    	
+#endif
+
         glfwSwapBuffers(app->window->handle);
     }
 
@@ -195,9 +211,12 @@ void RunApplication(Application* app)
         app->layers[i - 1]->config.onEnd(app);
     }
 
+#if ENABLE_IMGUI
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+#endif
 }
 
 void ApplicationAttachLayer(Application* app, Layer* layer)

@@ -21,8 +21,10 @@ void AttachShaderToShaderProgram(ShaderProgram* program, Shader* shader);
 void DetachShaderFromShaderProgram(ShaderProgram* program, Shader* shader);
 b8 LinkShaderProgram(ShaderProgram* program);
 void UseShaderProgram(ShaderProgram* program);
+i32 GetUniformLocation(ShaderProgram* program, const char* name);
 //TODO: use uniform location caching
-void SetUnifromInt(ShaderProgram* program, const char* name, int x);
+void SetUnifromInt(ShaderProgram* program, const char* name, i32 x);
+void SetUnifromIntArray(ShaderProgram* program, const char* name, i32* x, i32 count);
 void SetUnifromFloat(ShaderProgram* program, const char* name, float x);
 void SetUnifromFloat2(ShaderProgram* program, const char* name, float x, float y);
 void SetUnifromFloat3(ShaderProgram* program, const char* name, float x, float y, float z);

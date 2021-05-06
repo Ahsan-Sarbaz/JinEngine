@@ -6,11 +6,12 @@
 int main()
 {
     ApplicationConfiguration config = {};
-    config.windowConfig.width = 800;
-    config.windowConfig.height = 600;
+    config.windowConfig.width = 1280;
+    config.windowConfig.height = 1024;
     config.windowConfig.title = "Sokuban";
-    config.windowConfig.vsync = 1;
-    config.windowConfig.fullscreen = 1;
+    config.windowConfig.vsync = TRUE;
+    config.windowConfig.fullscreen = FALSE;
+    config.windowConfig.enable_context_core_profile = TRUE;
     config.opengl_version_major = 3;
     config.opengl_version_minor = 3;
 

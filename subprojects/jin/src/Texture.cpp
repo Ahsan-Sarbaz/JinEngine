@@ -7,16 +7,29 @@
 
 Texture* CreateTexture(const char* path)
 {
-    Texture* texture = (Texture*)MemAlloc(sizeof(Texture), MEMORY_TAG_STRUCT);
-
     u8* buffer;
     i32 size = 0;
-    auto success = ReadTextureToBuffer(path, &buffer, &size, &texture->width, &texture->height, &texture->channels);
+    i32 width = 0 , height = 0, channels = 0;
+    auto success = ReadTextureToBuffer(path, &buffer, &size, &width, &height, &channels);
 
+    Texture* texture = CreateTextureFromBuffer(buffer, width, height, channels);
+    texture->name = path;
     if(success)
     {
         LOG_INFO("Loaded Texture %s Successfully %dx%dx%d\n", path, texture->width, texture->height, texture->channels);
     }
+
+    FreeTextureBuffer(&buffer, size);
+    return texture;
+}
+
+Texture* CreateTextureFromBuffer(unsigned char* buffer, i32 width, i32 height, i32 channels)
+{
+    Texture* texture = (Texture*)MemAlloc(sizeof(Texture), MEMORY_TAG_STRUCT);
+    texture->width = width;
+    texture->height = height;
+    texture->channels = channels;
+    texture->name = "May Be White";
 
     glGenTextures(1, &texture->id);
     glBindTexture(GL_TEXTURE_2D, texture->id);
@@ -43,13 +56,24 @@ Texture* CreateTexture(const char* path)
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    FreeTextureBuffer(&buffer, size);
     return texture;
 }
+
 
 void DeleteTexture(Texture* texture)
 {
     if(texture)
         glDeleteTextures(1, &texture->id);
     MemFree(texture, sizeof(Texture), MEMORY_TAG_STRUCT);
+}
+
+void BindTexture(Texture* texture, i32 unit)
+{
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+}
+
+void UnbindTexture()
+{
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

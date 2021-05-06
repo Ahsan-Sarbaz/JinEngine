@@ -1,5 +1,6 @@
 project('jin', 'cpp',
-    version: '0.1 WIP'
+    version: '0.1 WIP',
+    default_options: ['cpp_std=c++17']
 )
 
 include_dirs = include_directories('include')
@@ -11,7 +12,8 @@ sources += 'src/Memory.cpp'
 sources += 'src/Renderer.cpp'
 sources += 'src/Vector2.cpp'
 sources += 'src/Vector3.cpp'
-sources += 'src/Vector3.cpp'
+sources += 'src/Vector4.cpp'
+sources += 'src/Rect.cpp'
 sources += 'src/Matrix4.cpp'
 sources += 'src/Window.cpp'
 sources += 'src/Shader.cpp'
@@ -28,10 +30,17 @@ gl_dep = dependency('gl')
 imgui = subproject('imgui')
 imgui_dep = imgui.get_variable('imgui_dep')
 
+args = []
+args+='-g'
+args+='-O2'
+args+='-Wno-everything'
+
+
 jin = library('jin',
     sources,
     dependencies: [glfw_dep, glew_dep, gl_dep, imgui_dep],
     include_directories: include_dirs,
+    cpp_args: args
 )
 
 jin_dep = declare_dependency(include_directories: include_dirs, link_with: jin)

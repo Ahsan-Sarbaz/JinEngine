@@ -1,6 +1,7 @@
 project('sokuban', 'cpp',
     version: '0.1',
-    default_options: ['cpp_std=c++17', 'cpp_args=-O3'])
+    default_options: ['cpp_std=c++17']
+)
 
 jin = subproject('jin')
 jin_dep = jin.get_variable('jin_dep')
@@ -15,4 +16,9 @@ sokubak_src += 'src/ImGUILayer.cpp'
 
 sokuban_inc_dir = include_directories(['include'])
 
-executable('sokuban', sokubak_src, include_directories: sokuban_inc_dir, dependencies: [imgui_dep, jin_dep])
+args = []
+args+='-g'
+args+='-O2'
+args+='-Wno-everything'
+
+executable('sokuban', sokubak_src, include_directories: sokuban_inc_dir, dependencies: [imgui_dep, jin_dep], cpp_args: args)

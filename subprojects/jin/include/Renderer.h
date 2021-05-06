@@ -6,6 +6,8 @@
 #include "VertexArrayObject.h"
 #include "VertexBufferObject.h"
 #include "IndexBufferObject.h"
+#include "Texture.h"
+#include "ShaderProgram.h"
 
 struct Application;
 
@@ -24,6 +26,9 @@ struct BatchRendererVertex
 {
     v2 position;
     v4 color;
+    v2 uv;
+    float texture_id;
+    float tiling_factor;
 };
 
 struct BatchRendererStats
@@ -45,8 +50,10 @@ struct BatchRendererData
     VBO* vbo;
     IBO* ibo;
     u32 indexCount;
-    b8 is_batch_started;
-    b8 is_batch_uploaded;
+    Texture* textures[16];
+    u32 textures_count;
+    i32 max_textures_count;
+    ShaderProgram* batchShader;
 };
 
 struct Renderer
@@ -64,6 +71,7 @@ void SetOrthoProjection(const v2& size);
 void DrawQuad(const v2& position, const v2& size, const v4& color);
 
 void DrawQuadBatched(const v2& position, const v2& size, const v4& color);
+void DrawTexturedQuadBatched(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
 void StartNewBatch();
 void UploadCurrentBatch();
 void DrawCurrentBatch();

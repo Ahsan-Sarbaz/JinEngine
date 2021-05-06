@@ -3,6 +3,7 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
+#include "Rect.h"
 #include "VertexArrayObject.h"
 #include "VertexBufferObject.h"
 #include "IndexBufferObject.h"
@@ -65,15 +66,12 @@ struct Renderer
 
 Renderer* CreateRenderer(const RendererConfiguration& config);
 void DeleteRenderer(Renderer* renderer);
-/// this function uses opengl immidiate calls so don't use it for something serious
-void SetOrthoProjection(const v2& size);
-/// this function uses opengl immidiate calls so don't use it for something serious
-void DrawQuad(const v2& position, const v2& size, const v4& color);
 
-void DrawQuadBatched(const v2& position, const v2& size, const v4& color);
-void DrawTexturedQuadBatched(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
-void StartNewBatch();
-void UploadCurrentBatch();
-void DrawCurrentBatch();
+void DrawQuad(const v2& position, const v2& size, const v4& color);
+void DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
+void DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
+void StartNewBatch(Renderer* renderer);
+void UploadCurrentBatch(Renderer* renderer);
+void DrawCurrentBatch(Renderer* renderer);
 void DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count);
-void ResetRendererStats();
+void ResetRendererStats(Renderer* renderer);

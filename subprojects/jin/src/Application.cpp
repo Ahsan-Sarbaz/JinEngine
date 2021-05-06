@@ -194,7 +194,7 @@ void RunApplication(Application* app)
                 ImGui::Text("Index Count P/F: %d", app->renderer->batchStats->index_count);
                 ImGui::TreePop();
             }
-            ResetRendererStats();
+            ResetRendererStats(app->renderer);
             ImGui::End();
         }
 

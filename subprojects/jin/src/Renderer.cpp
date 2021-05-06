@@ -5,13 +5,14 @@
 #include "Rect.h"
 #include <GL/glew.h>
 
-
 static Renderer* s_renderer;
 
 Renderer* CreateRenderer(const RendererConfiguration& config)
 {
     Renderer* renderer = (Renderer*)MemAlloc(sizeof(Renderer), MEMORY_TAG_STRUCT);
     renderer->config = config;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     if(config.enable_batch_renderering)
     {
@@ -97,30 +98,6 @@ void DeleteRenderer(Renderer* renderer)
     MemFree(renderer, sizeof(Renderer), MEMORY_TAG_STRUCT);
 }
 
-void SetOrthoProjection(const v2& size)
-{
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, (double)size.x, (double)size.y, 0.0, -1.0, 1.0);
-}
-
-void DrawQuad(const v2& position, const v2& size, const v4& color)
-{
-    glBegin(GL_QUADS);
-    glColor4f(color.r, color.g, color.b, color.a);
-    glVertex2f(position.x, position.y);
-
-    glColor4f(color.r, color.g, color.b, color.a);
-    glVertex2f(position.x, position.y + size.y);
-    
-    glColor4f(color.r, color.g, color.b, color.a);
-    glVertex2f(position.x + size.x, position.y + size.y);
-    
-    glColor4f(color.r, color.g, color.b, color.a);
-    glVertex2f(position.x + size.x, position.y);
-    glEnd();
-}
-
 void AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor)
 {
     s_renderer->batchData->buffer_ptr->position = position;
@@ -157,24 +134,24 @@ void AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const 
     s_renderer->batchStats->vertex_count+=4;
 }
 
-void DrawQuadBatched(const v2& position, const v2& size, const v4& color)
+void AddTexturedQuadToBuffer(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor, const v4& color)
 {
     if(s_renderer->batchData->indexCount >= s_renderer->config.batch_renderer_max_indices)
     {
-        DrawCurrentBatch();
-        StartNewBatch();
+        DrawCurrentBatch(s_renderer);
+        StartNewBatch(s_renderer);
     }
 
-    AddQuadToBuffer(position, size, color, {0,0,1,1}, 0, 1);
-}
+    if(texture == nullptr)
+    {
+        AddQuadToBuffer(position, size, color, rect, 0, tiling_factor);
+        return;
+    }
 
-
-void DrawTexturedQuadBatched(const v2& position, const v2& size, Texture* texture, float tiling_factor, const v4& color)
-{
     if(s_renderer->batchData->textures_count >= s_renderer->batchData->max_textures_count)
     {
-        DrawCurrentBatch();
-        StartNewBatch();
+        DrawCurrentBatch(s_renderer);
+        StartNewBatch(s_renderer);
     }
 
     int texture_unit = 0;
@@ -195,27 +172,41 @@ void DrawTexturedQuadBatched(const v2& position, const v2& size, Texture* textur
 
     }
 
-    AddQuadToBuffer(position, size, color, {0,0,1,1}, (float)texture_unit, tiling_factor);    
+    AddQuadToBuffer(position, size, color, rect, (float)texture_unit, tiling_factor);
 }
 
-void StartNewBatch()
+void DrawQuad(const v2& position, const v2& size, const v4& color)
 {
-    s_renderer->batchData->buffer_ptr = s_renderer->batchData->buffer;
-    for (i32 i = 1; i < s_renderer->batchData->textures_count; i++)
+    AddTexturedQuadToBuffer(position, size, nullptr, {0,0,1,1}, 1, color);
+}
+
+void DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor, const v4& color)
+{
+    AddTexturedQuadToBuffer(position, {size.x  == 0 ? texture->width : size.x , size.y  == 0 ? texture->height : size.y} , texture, {0,0,1,1}, tiling_factor, color);
+}
+
+void DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor, const v4& color)
+{
+    AddTexturedQuadToBuffer(position, size, texture, rect, tiling_factor, color);
+}
+
+void StartNewBatch(Renderer* renderer)
+{
+    renderer->batchData->buffer_ptr = renderer->batchData->buffer;
+    for (i32 i = 1; i < renderer->batchData->textures_count; i++)
     {
-        s_renderer->batchData->textures[i] = nullptr;
+        renderer->batchData->textures[i] = nullptr;
     }
     
-    s_renderer->batchData->textures_count = 1;
-    
+    renderer->batchData->textures_count = 1;
 }
 
-void UploadCurrentBatch()
+void UploadCurrentBatch(Renderer* renderer)
 {
-    u32 size = (u8*)s_renderer->batchData->buffer_ptr - (u8*)s_renderer->batchData->buffer;
+    u32 size = (u8*)renderer->batchData->buffer_ptr - (u8*)renderer->batchData->buffer;
     if(size)
     {
-        SetVertexBufferObjectSubData(s_renderer->batchData->vbo, size, 0, s_renderer->batchData->buffer);
+        SetVertexBufferObjectSubData(renderer->batchData->vbo, size, 0, renderer->batchData->buffer);
     }
 }
 
@@ -225,33 +216,32 @@ void DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count)
     glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0);
 }
 
-void DrawCurrentBatch()
+void DrawCurrentBatch(Renderer* renderer)
 {
-    UploadCurrentBatch();
+    UploadCurrentBatch(renderer);
     m4 model = CreateIdentityMatrix4();
     m4 view = CreateIdentityMatrix4();
-    m4 proj = CreateOrthographicProjectionMatrix4(0.0f, (float)s_renderer->config.app->window->config.width, (float)s_renderer->config.app->window->config.height, 0.0f, 0.0f, 1.0f);
-    SetUniformMatrix4(s_renderer->batchData->batchShader, "model", model);
-    SetUniformMatrix4(s_renderer->batchData->batchShader, "view", view);
-    SetUniformMatrix4(s_renderer->batchData->batchShader, "proj", proj);
-    UseShaderProgram(s_renderer->batchData->batchShader);
+    m4 proj = CreateOrthographicProjectionMatrix4(0.0f, (float)renderer->config.app->window->config.width, (float)renderer->config.app->window->config.height, 0.0f, 0.0f, 1.0f);
+    SetUniformMatrix4(renderer->batchData->batchShader, "model", model);
+    SetUniformMatrix4(renderer->batchData->batchShader, "view", view);
+    SetUniformMatrix4(renderer->batchData->batchShader, "proj", proj);
+    UseShaderProgram(renderer->batchData->batchShader);
     
-    for (u32 i = 0; i < s_renderer->batchData->textures_count; i++)
+    for (u32 i = 0; i < renderer->batchData->textures_count; i++)
     {
-        BindTexture(s_renderer->batchData->textures[i], i);
+        BindTexture(renderer->batchData->textures[i], i);
     }
 
-    DrawVertexArrayObject(s_renderer->batchData->vao, s_renderer->batchData->indexCount);
-    s_renderer->batchData->indexCount = 0;
-    // LOG_TRACE("Draw Call\n");
-    s_renderer->batchStats->draw_count++;
+    DrawVertexArrayObject(renderer->batchData->vao, renderer->batchData->indexCount);
+    renderer->batchData->indexCount = 0;
+    renderer->batchStats->draw_count++;
 }
 
-void ResetRendererStats()
+void ResetRendererStats(Renderer* renderer)
 {
-    s_renderer->batchStats->draw_count = 0;
-    s_renderer->batchStats->index_count = 0;
-    s_renderer->batchStats->vertex_count = 0;
-    s_renderer->batchStats->quad_count = 0;
+    renderer->batchStats->draw_count = 0;
+    renderer->batchStats->index_count = 0;
+    renderer->batchStats->vertex_count = 0;
+    renderer->batchStats->quad_count = 0;
 }
 

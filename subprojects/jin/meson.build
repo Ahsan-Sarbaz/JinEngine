@@ -26,6 +26,8 @@ sources += 'src/Texture.cpp'
 sources += 'src/SpriteSheet.cpp'
 sources += 'src/SpriteSheetAnimation.cpp'
 sources += 'src/Time.cpp'
+sources += 'src/Entity.cpp'
+sources += 'src/Maths.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')

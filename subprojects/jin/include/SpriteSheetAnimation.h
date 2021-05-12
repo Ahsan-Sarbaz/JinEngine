@@ -19,10 +19,9 @@ struct SpriteSheetAnimationLayout
 struct SpriteSheetAnimation
 {
     SpriteSheet* sprite_sheet;
-    SpriteSheetAnimationLayout** layouts;
-    i32 layout_count;
+    SpriteSheetAnimationLayout layout;
 };
 
-SpriteSheetAnimation* CreateSpriteSheetAnimation(SpriteSheet* sprite_sheet, SpriteSheetAnimationLayout* layouts, i32 count);
+SpriteSheetAnimation* CreateSpriteSheetAnimation(SpriteSheet* sprite_sheet, const SpriteSheetAnimationLayout& layout);
 void DeleteSpriteSheetAnimation(SpriteSheetAnimation* ss_animation);
 void UpdateSpriteSheetAnimation(SpriteSheetAnimation* ss_animation);

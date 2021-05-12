@@ -4,6 +4,9 @@
 #include "Logger.h"
 #include "Renderer.h"
 #include "Time.h"
+#include "Entity.h"
+#include "Components.h"
+#include "Maths.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -142,6 +145,8 @@ void RunApplication(Application* app)
     
     auto time = GetTimeInternal();
 
+    auto registry = GetEnTTRegistry();
+
     while (!glfwWindowShouldClose(app->window->handle))
     {
         current_time = glfwGetTime();
@@ -168,10 +173,34 @@ void RunApplication(Application* app)
         ImGui::NewFrame();
 #endif
 
+        //SpriteRenderingSystem(app);
+
+        StartNewBatch(app->renderer);
+        for(auto& entity : registry.view<SpriteComponent>())
+        {
+            auto& tranfrom = registry.get<TransformComponent>(entity);
+            auto& spriteCompnonent = registry.get<SpriteComponent>(entity);
+
+            DrawTexturedQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), spriteCompnonent.texture);
+        }
+
+        for(auto& entity : registry.view<SpriteSheetAnimationComponent>())
+        {
+            auto& tranfrom = registry.get<TransformComponent>(entity);
+            auto& anim = registry.get<SpriteSheetAnimationComponent>(entity);
+
+            DrawTexturedRectQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), anim.spriteSheetAnimation->sprite_sheet->config.texture, 
+            anim.spriteSheetAnimation->sprite_sheet->rects[anim.spriteSheetAnimation->layout.current_frame]);
+            UpdateSpriteSheetAnimation(anim.spriteSheetAnimation);
+        }
+
+        DrawCurrentBatch(app->renderer);
+
         for(int i = app->layersCount; i > 0; --i)
         {
             app->layers[i - 1]->config.onUpdate(app);
         }
+
 
 #if ENABLE_IMGUI
 
@@ -213,6 +242,37 @@ void RunApplication(Application* app)
                 ImGui::TreePop();
             }
             ResetRendererStats(app->renderer);
+            ImGui::Text("Enitites");
+            for(auto& entity : registry.view<TagComponent>())
+            {
+                ImGui::Text("Name: %s",  registry.get<TagComponent>(entity).name);
+
+                TransformComponent* transform;
+                if((transform = registry.try_get<TransformComponent>(entity)) != nullptr)
+                {
+                    ImGui::Text("Position: %.2f, %.2f, %.2f", transform->position.x, transform->position.y, transform->position.z);
+                    ImGui::Text("Rotation: %.2f, %.2f, %.2f", transform->rotation.x, transform->rotation.y, transform->rotation.z);
+                    ImGui::Text("Size:     %.2f, %.2f, %.2f", transform->size.x, transform->size.y, transform->size.z);
+                }
+
+                ImGui::Separator();
+
+                SpriteSheetAnimationComponent* spriteSheetAnimComp;
+                if((spriteSheetAnimComp = registry.try_get<SpriteSheetAnimationComponent>(entity)) != nullptr)
+                {
+
+                    ImGui::Text("Anim Name: %s", spriteSheetAnimComp->spriteSheetAnimation->layout.name);
+                    ImGui::Text("Anim Start: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.start_frame);
+                    ImGui::Text("Anim End: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.end_frame);
+                    ImGui::Text("Anim FPS: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.frames_per_second);
+                    ImGui::Text("Anim Total Time: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.total_time);
+                    ImGui::Text("Anim Time Accum: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_accumulator);
+                    ImGui::Text("Anim Time Step:  %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_step);
+                    ImGui::Text("Anim Current Frame: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.current_frame);
+                    ImGui::Separator();                    
+                }
+            }
+
             ImGui::End();
         }
 

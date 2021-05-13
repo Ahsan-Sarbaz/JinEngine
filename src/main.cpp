@@ -14,6 +14,7 @@ int main()
     config.windowConfig.enable_context_core_profile = TRUE;
     config.opengl_version_major = 3;
     config.opengl_version_minor = 3;
+    config.enable_imgui = 1;
 
     
     Application* app = CreateApplication(config);

@@ -11,15 +11,12 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+// TODO: NOTE: this is to be controlled at build time
 #define ENABLE_IMGUI 1
-
-#if ENABLE_IMGUI
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
-#endif
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -114,7 +111,7 @@ Application* CreateApplication(const ApplicationConfiguration& config)
         app->config.opengl_version_major = 3;
         app->config.opengl_version_minor = 3;
     }
-    
+
     app->config.windowConfig.gl_contex_version_major = app->config.opengl_version_major;
     app->config.windowConfig.gl_contex_version_minor = app->config.opengl_version_minor;
     
@@ -146,18 +143,20 @@ Application* CreateApplication(const ApplicationConfiguration& config)
     LOG_INFO("GLEW INIT SUCCESS! USING RENDERER: %s\n", glGetString(GL_RENDERER));
     LOG_INFO("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-#if ENABLE_IMGUI
+    app->config.enable_imgui = app->config.enable_imgui ? ENABLE_IMGUI : 0;
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(app->window->handle, true);
-    const char* glsl_version = "#version 130";
-    ImGui_ImplOpenGL3_Init(glsl_version);
-#endif
+    if(app->config.enable_imgui)
+    {
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(app->window->handle, true);
+        const char* glsl_version = "#version 130";
+        ImGui_ImplOpenGL3_Init(glsl_version);
+    }
 
     RendererConfiguration rendererConfig = {};
     rendererConfig.app = app;
@@ -189,10 +188,6 @@ void DeleteApplication(Application* app)
 void RunApplication(Application* app)
 {
     glClearColor(0, 0, 0, 1);
-
-#if ENABLE_IMGUI
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-#endif
 
     for(int i = app->layersCount; i > 0; --i)
     {
@@ -230,16 +225,20 @@ void RunApplication(Application* app)
         glViewport(0, 0, app->config.windowConfig.width, app->config.windowConfig.height);
         glClear(GL_COLOR_BUFFER_BIT);
     
-#if ENABLE_IMGUI
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-#endif
-
-        //SpriteRenderingSystem(app);
+        if(app->config.enable_imgui)
+        {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+        }
 
         StartNewBatch(app->renderer);
+
+        for(int i = app->layersCount; i > 0; --i)
+        {
+            app->layers[i - 1]->config.onUpdate(app);
+        }
+
         for(auto& entity : registry.view<SpriteComponent>())
         {
             auto& tranfrom = registry.get<TransformComponent>(entity);
@@ -260,90 +259,84 @@ void RunApplication(Application* app)
 
         DrawCurrentBatch(app->renderer);
 
-        for(int i = app->layersCount; i > 0; --i)
+        if(app->config.enable_imgui)
         {
-            app->layers[i - 1]->config.onUpdate(app);
-        }
-
-
-#if ENABLE_IMGUI
-
-        if(ImGui::Begin("Debug"))
-        {
-            ImGui::Text("Attached Layers");
-            for(int i = app->layersCount; i > 0; --i)
+            if(ImGui::Begin("Debug"))
             {
-                ImGui::Text("Layer: %s", app->layers[i - 1]->config.name);
-            }
-            auto memory_state = GetMemoryState();
-            ImGui::Separator();
-            if(ImGui::TreeNode("Memory"))
-            {
-                ImGui::Text("Total : %d B, %.2f KB, %.2f MB", 
-                memory_state->total_memory, (float)memory_state->total_memory / 1024, (float)memory_state->total_memory / (1024 * 1024));
-                ImGui::Text("Overall : %d B, %.2f KB, %.2f MB", 
-                memory_state->memory_consumption, (float)memory_state->memory_consumption/ 1024, (float)memory_state->memory_consumption / (1024 * 1024));    
-                for (i32 i = 0; i < MEMORY_TAG_COUNT; i++)
+                ImGui::Text("Attached Layers");
+                for(int i = app->layersCount; i > 0; --i)
                 {
-                    ImGui::Text("\t%s : %d B, %.2f KB, %.2f MB",
-                    MemoryTagToString((MEMORY_TAG)i), memory_state->memory_tag[i],
-                    (float)memory_state->memory_tag[i] / 1024, 
-                    (float)memory_state->memory_tag[i] / (1024 * 1024));
+                    ImGui::Text("Layer: %s", app->layers[i - 1]->config.name);
                 }
-
-                ImGui::TreePop();
-            }
-
-            if(ImGui::TreeNode("Batch Renderer Stats"))
-            {
-                ImGui::Text("Max Quads Count: %d", app->renderer->batchStats->max_quad_count);
-                ImGui::Text("Max Verts Count: %d", app->renderer->batchStats->max_vertex_count);
-                ImGui::Text("Max Index Count: %d", app->renderer->batchStats->max_index_count);
-                ImGui::Text("Draw Count P/F : %d", app->renderer->batchStats->draw_count);
-                ImGui::Text("Quad Count P/F : %d", app->renderer->batchStats->quad_count);
-                ImGui::Text("Verts Count P/F: %d", app->renderer->batchStats->vertex_count);
-                ImGui::Text("Index Count P/F: %d", app->renderer->batchStats->index_count);
-                ImGui::TreePop();
-            }
-            ResetRendererStats(app->renderer);
-            ImGui::Text("Enitites");
-            for(auto& entity : registry.view<TagComponent>())
-            {
-                ImGui::Text("Name: %s",  registry.get<TagComponent>(entity).name);
-
-                TransformComponent* transform;
-                if((transform = registry.try_get<TransformComponent>(entity)) != nullptr)
-                {
-                    ImGui::Text("Position: %.2f, %.2f, %.2f", transform->position.x, transform->position.y, transform->position.z);
-                    ImGui::Text("Rotation: %.2f, %.2f, %.2f", transform->rotation.x, transform->rotation.y, transform->rotation.z);
-                    ImGui::Text("Size:     %.2f, %.2f, %.2f", transform->size.x, transform->size.y, transform->size.z);
-                }
-
+                auto memory_state = GetMemoryState();
                 ImGui::Separator();
-
-                SpriteSheetAnimationComponent* spriteSheetAnimComp;
-                if((spriteSheetAnimComp = registry.try_get<SpriteSheetAnimationComponent>(entity)) != nullptr)
+                if(ImGui::TreeNode("Memory"))
                 {
+                    ImGui::Text("Total : %d B, %.2f KB, %.2f MB", 
+                    memory_state->total_memory, (float)memory_state->total_memory / 1024, (float)memory_state->total_memory / (1024 * 1024));
+                    ImGui::Text("Overall : %d B, %.2f KB, %.2f MB", 
+                    memory_state->memory_consumption, (float)memory_state->memory_consumption/ 1024, (float)memory_state->memory_consumption / (1024 * 1024));    
+                    for (i32 i = 0; i < MEMORY_TAG_COUNT; i++)
+                    {
+                        ImGui::Text("\t%s : %d B, %.2f KB, %.2f MB",
+                        MemoryTagToString((MEMORY_TAG)i), memory_state->memory_tag[i],
+                        (float)memory_state->memory_tag[i] / 1024, 
+                        (float)memory_state->memory_tag[i] / (1024 * 1024));
+                    }
 
-                    ImGui::Text("Anim Name: %s", spriteSheetAnimComp->spriteSheetAnimation->layout.name);
-                    ImGui::Text("Anim Start: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.start_frame);
-                    ImGui::Text("Anim End: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.end_frame);
-                    ImGui::Text("Anim FPS: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.frames_per_second);
-                    ImGui::Text("Anim Total Time: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.total_time);
-                    ImGui::Text("Anim Time Accum: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_accumulator);
-                    ImGui::Text("Anim Time Step:  %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_step);
-                    ImGui::Text("Anim Current Frame: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.current_frame);
-                    ImGui::Separator();                    
+                    ImGui::TreePop();
                 }
+
+                if(ImGui::TreeNode("Batch Renderer Stats"))
+                {
+                    ImGui::Text("Max Quads Count: %d", app->renderer->batchStats->max_quad_count);
+                    ImGui::Text("Max Verts Count: %d", app->renderer->batchStats->max_vertex_count);
+                    ImGui::Text("Max Index Count: %d", app->renderer->batchStats->max_index_count);
+                    ImGui::Text("Draw Count P/F : %d", app->renderer->batchStats->draw_count);
+                    ImGui::Text("Quad Count P/F : %d", app->renderer->batchStats->quad_count);
+                    ImGui::Text("Verts Count P/F: %d", app->renderer->batchStats->vertex_count);
+                    ImGui::Text("Index Count P/F: %d", app->renderer->batchStats->index_count);
+                    ImGui::TreePop();
+                }
+
+                ResetRendererStats(app->renderer);
+                ImGui::Text("Enitites");
+                for(auto& entity : registry.view<TagComponent>())
+                {
+                    ImGui::Text("Name: %s",  registry.get<TagComponent>(entity).name);
+
+                    TransformComponent* transform;
+                    if((transform = registry.try_get<TransformComponent>(entity)) != nullptr)
+                    {
+                        ImGui::Text("Position: %.2f, %.2f, %.2f", transform->position.x, transform->position.y, transform->position.z);
+                        ImGui::Text("Rotation: %.2f, %.2f, %.2f", transform->rotation.x, transform->rotation.y, transform->rotation.z);
+                        ImGui::Text("Size:     %.2f, %.2f, %.2f", transform->size.x, transform->size.y, transform->size.z);
+                    }
+
+                    ImGui::Separator();
+
+                    SpriteSheetAnimationComponent* spriteSheetAnimComp;
+                    if((spriteSheetAnimComp = registry.try_get<SpriteSheetAnimationComponent>(entity)) != nullptr)
+                    {
+
+                        ImGui::Text("Anim Name: %s", spriteSheetAnimComp->spriteSheetAnimation->layout.name);
+                        ImGui::Text("Anim Start: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.start_frame);
+                        ImGui::Text("Anim End: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.end_frame);
+                        ImGui::Text("Anim FPS: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.frames_per_second);
+                        ImGui::Text("Anim Total Time: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.total_time);
+                        ImGui::Text("Anim Time Accum: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_accumulator);
+                        ImGui::Text("Anim Time Step:  %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_step);
+                        ImGui::Text("Anim Current Frame: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.current_frame);
+                        ImGui::Separator();                    
+                    }
+                }
+                ImGui::End();
             }
 
-            ImGui::End();
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-#endif
-
+        
         glfwSwapBuffers(app->window->handle);
     }
 
@@ -353,12 +346,12 @@ void RunApplication(Application* app)
         app->layers[i - 1]->config.onEnd(app);
     }
 
-#if ENABLE_IMGUI
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-#endif
+    if(app->config.enable_imgui)
+    {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
 }
 
 void ApplicationAttachLayer(Application* app, Layer* layer)

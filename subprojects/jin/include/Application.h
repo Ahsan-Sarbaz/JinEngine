@@ -13,6 +13,7 @@ struct ApplicationConfiguration
     WindowConfiguration windowConfig;
     u8 opengl_version_major;
     u8 opengl_version_minor;
+    b8 enable_imgui;
 };
 
 

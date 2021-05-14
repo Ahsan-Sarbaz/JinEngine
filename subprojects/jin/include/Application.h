@@ -2,6 +2,8 @@
 #include "Types.h"
 #include "Window.h"
 #include "Layer.h"
+#include <vector>
+#include "Event.h"
 
 
 struct Renderer;
@@ -20,7 +22,9 @@ struct Application
     Window* window;
     Layer* layers[32];
     u32 layersCount;
-    Renderer* renderer;    
+    Renderer* renderer;
+    std::vector<Event>* events;
+    std::vector<EventListener>* event_listners;
 };
 
 Application* CreateApplication(const ApplicationConfiguration& config);

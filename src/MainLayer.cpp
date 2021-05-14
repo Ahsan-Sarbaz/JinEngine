@@ -1,33 +1,23 @@
 #include "MainLayer.h"
 #include "Jin.h"
-#include "Entity.h"
-#include "Components.h"
 
-
-Texture* test;
-SpriteSheet* ss;
-SpriteSheetAnimation* animation;
 void MainLayerStart(Application* app)
 {
-    test = CreateTexture("res/textures/running.png");
-    SpriteSheetConfiguration ssConfig = {};
-    ssConfig.texture = test;
-    ssConfig.sprite_width = 108;
-    ssConfig.sprite_height = 140;
-    ss = CreateSpriteSheet(ssConfig);
-    SpriteSheetAnimationLayout layout[2] = {};
-    layout[0].name = "running";
-    layout[0].start_frame = 0;
-    layout[0].end_frame = 8;
-    layout[0].total_time = 0.7f;
-    
-    layout[1].name = "running-back";
-    layout[1].start_frame = 9;
-    layout[1].end_frame = 16;
-    layout[1].total_time = 0.7f;
-    
-    animation = CreateSpriteSheetAnimation(ss, layout[0]);
-    CreateSpriteSheetAnimationEntity("boy", animation, {{}, {}, {100, 100, 0}});
+    RegisterListener(EVENT_TYPE_KEYBOARD_KEY_DOWN, [](Event e){
+        LOG_INFO("Key Up %c \n", e.data.unsigned_char[0]);
+    });
+
+    RegisterListener(EVENT_TYPE_WINDOW_RESIZE, [](Event e){
+        LOG_TRACE("Window Resize %dx%d\n", e.data.signed_int[0],e.data.signed_int[1]);
+    });
+
+    RegisterListener(EVENT_TYPE_MOUSE_MOVE, [](Event e){
+        LOG_TRACE("Mouse Move %.2f,%.2f\n", e.data.real_double[0],e.data.real_double[1]);
+    });
+
+    RegisterListener(EVENT_TYPE_MOUSE_BUTTON_DOWN, [](Event e){
+        LOG_TRACE("Mouse Button Down %d\n", e.data.signed_int[0]);
+    });
 }
 
 void MainLayerUpdate(Application* app)
@@ -37,9 +27,7 @@ void MainLayerUpdate(Application* app)
 
 void MainLayerEnd(Application* app)
 {
-    DeleteSpriteSheet(ss);
-    DeleteSpriteSheetAnimation(animation);
-    DeleteTexture(test);
+
 }
 
 Layer* GetMainLayer(Application* app)

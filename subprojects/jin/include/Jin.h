@@ -20,3 +20,6 @@
 #include "Matrix4.h"
 #include "Time.h"
 #include "SpriteSheetAnimation.h"
+#include "Event.h"
+#include "Components.h"
+#include "Entity.h"

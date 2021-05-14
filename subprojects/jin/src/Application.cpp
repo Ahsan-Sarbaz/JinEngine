@@ -31,6 +31,64 @@ static void glfw_window_framebuffer_resize(GLFWwindow* window, int width, int he
     auto app =  (Application*)glfwGetWindowUserPointer(window);
     app->config.windowConfig.width = width;
     app->config.windowConfig.height = height;
+
+    Event e = {};
+    e.type = EVENT_TYPE_WINDOW_RESIZE;
+    e.data.signed_int[0] = width;
+    e.data.signed_int[1] = height;
+    app->events->push_back(e);
+}
+
+static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int action, int mod)
+{
+    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    Event e = {};
+    e.data.signed_int[0] = key;
+    if (action == GLFW_PRESS)
+    {
+        e.type = EVENT_TYPE_KEYBOARD_KEY_DOWN;
+    }
+    else if(action == GLFW_REPEAT)
+    {
+        e.type = EVENT_TYPE_KEYBOARD_KEY_REPEAT;
+    }
+    else if(action == GLFW_RELEASE)
+    {
+        e.type = EVENT_TYPE_KEYBOARD_KEY_RELEASE;
+    }    
+    
+    app->events->emplace_back(e);
+}
+
+static void glfw_cursor_pos_callback(GLFWwindow* window, double x, double y)
+{
+    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    Event e = {};
+    e.type = EVENT_TYPE_MOUSE_MOVE;
+    e.data.real_double[0] = x;
+    e.data.real_double[1] = y;
+    app->events->push_back(e);
+}
+
+static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mod)
+{
+    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    Event e = {};
+    e.data.signed_int[0] = button;
+    if (action == GLFW_PRESS)
+    {
+        e.type = EVENT_TYPE_MOUSE_BUTTON_DOWN;
+    }
+    else if(action == GLFW_REPEAT)
+    {
+        e.type = EVENT_TYPE_MOUSE_BUTTON_REPEAT;
+    }
+    else if(action == GLFW_RELEASE)
+    {
+        e.type = EVENT_TYPE_MOUSE_BUTTON_RELEASE;
+    }    
+    
+    app->events->emplace_back(e);
 }
 
 Application* CreateApplication(const ApplicationConfiguration& config)
@@ -70,6 +128,9 @@ Application* CreateApplication(const ApplicationConfiguration& config)
     
     glfwSetWindowUserPointer(app->window->handle, app);
     glfwSetFramebufferSizeCallback(app->window->handle, glfw_window_framebuffer_resize);
+    glfwSetKeyCallback(app->window->handle, glfw_key_callback);
+    glfwSetCursorPosCallback(app->window->handle, glfw_cursor_pos_callback);
+    glfwSetMouseButtonCallback(app->window->handle, glfw_mouse_button_callback);
 
     /// update the window size if the window creation changed it
     app->config.windowConfig.width = app->window->config.width;
@@ -106,6 +167,7 @@ Application* CreateApplication(const ApplicationConfiguration& config)
     rendererConfig.batch_renderer_max_quads = 100;
     app->renderer = CreateRenderer(rendererConfig);
 
+    InitEventSystem(app);
     return app;
 }
 
@@ -149,6 +211,9 @@ void RunApplication(Application* app)
 
     while (!glfwWindowShouldClose(app->window->handle))
     {
+        glfwPollEvents();
+        PollEvents();
+
         current_time = glfwGetTime();
         delta_time = (current_time - prev_time);
         prev_time = current_time;
@@ -156,7 +221,6 @@ void RunApplication(Application* app)
         (*time)->delta_time = (delta_time * (*time)->time_scale) * 1000.0;
         (*time)->delta_time_ms = (delta_time * (*time)->time_scale);
 
-        glfwPollEvents();
         
         if(glfwGetKey(app->window->handle, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {

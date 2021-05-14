@@ -28,6 +28,7 @@ sources += 'src/SpriteSheetAnimation.cpp'
 sources += 'src/Time.cpp'
 sources += 'src/Entity.cpp'
 sources += 'src/Maths.cpp'
+sources += 'src/Event.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')

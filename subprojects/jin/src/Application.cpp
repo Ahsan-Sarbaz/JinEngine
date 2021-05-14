@@ -40,7 +40,8 @@ static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int act
 {
     auto app =  (Application*)glfwGetWindowUserPointer(window);
     Event e = {};
-    e.data.signed_int[0] = key;
+    e.data.key_char = key;
+    e.data.key_mods = mod;
     if (action == GLFW_PRESS)
     {
         e.type = EVENT_TYPE_KEYBOARD_KEY_DOWN;

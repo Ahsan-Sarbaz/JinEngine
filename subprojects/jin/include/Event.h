@@ -33,6 +33,24 @@ struct EventData
         i32 signed_int[8];
         i16 signed_short[16];
         i8 signed_char[32];
+        struct
+        {
+            i32 key_char;
+            i32 key_mods;
+        };
+
+        struct
+        {
+            double x;
+            double y;
+        };
+
+        struct
+        {
+            double width;
+            double height;
+        };
+        
     };
 };
 

@@ -4,7 +4,13 @@
 void MainLayerStart(Application* app)
 {
     RegisterListener(EVENT_TYPE_KEYBOARD_KEY_DOWN, [](Event e){
-        LOG_INFO("Key Up %c \n", e.data.unsigned_char[0]);
+        if(e.data.key_char == JIN_KEY_SPACE)
+        {
+            if(e.data.key_mods & (JIN_MOD_CONTROL))
+            {
+                LOG_FATAL("SPACE PRESSED %d %d\n", e.data.key_char, e.data.key_mods);
+            }
+        }
     });
 
     RegisterListener(EVENT_TYPE_WINDOW_RESIZE, [](Event e){

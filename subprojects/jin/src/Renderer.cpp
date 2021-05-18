@@ -3,7 +3,11 @@
 #include "Memory.h"
 #include "Logger.h"
 #include "Rect.h"
+#include "Time.h"
+
 #include <GL/glew.h>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 static Renderer* s_renderer;
 
@@ -14,6 +18,8 @@ Renderer* CreateRenderer(const RendererConfiguration& config)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
+    glEnable(GL_DEPTH_TEST);
+
     if(config.enable_batch_renderering)
     {
         renderer->config.batch_renderer_max_vertices = 4 * config.batch_renderer_max_quads;
@@ -162,6 +168,26 @@ Renderer* CreateRenderer(const RendererConfiguration& config)
         MemFree(samplers, sizeof(i32) * renderer->batchData->max_textures_count, MEMORY_TAG_STRUCT);   
     }
 
+    renderer->rendereData = (ThreeDRendererData*)MemAlloc(sizeof(ThreeDRendererData), MEMORY_TAG_STRUCT);
+    char* v_source = "#version 330 core\n"
+    "layout(location=0) in vec3 pos;\n"
+    "uniform mat4 u_proj;\n"
+    "uniform mat4 u_view;\n"
+    "uniform mat4 u_model;\n"
+    "out vec3 v_color;\n"
+    "void main() {\n"
+    "v_color = pos;"
+    "gl_Position = u_proj * u_view * u_model * vec4(pos, 1);"
+    "}\n";
+    char* f_source = "#version 330 core\n"
+    "out vec4 final_color;\n"
+    "in vec3 v_color;\n"
+    "void main() {\n"
+    "final_color = vec4(v_color,1);"
+    "}\n";
+
+    renderer->rendereData->shader = CreateShaderProgramFromVFShaderSources(v_source, f_source);
+
     s_renderer = renderer;
     return renderer;
 }
@@ -176,6 +202,11 @@ void DeleteRenderer(Renderer* renderer)
     MemFree(renderer->batchData->buffer, sizeof(BatchRendererVertex) * renderer->config.batch_renderer_max_vertices, MEMORY_TAG_BATCH_RENDERER_BUFFER);
     MemFree(renderer->batchData, sizeof(BatchRendererData), MEMORY_TAG_STRUCT);
     MemFree(renderer->batchStats, sizeof(BatchRendererStats), MEMORY_TAG_STRUCT);
+
+    MemFree(renderer->rendereData, sizeof(ThreeDRendererData), MEMORY_TAG_STRUCT);
+    DeleteShaderProgram(renderer->rendereData->shader);
+
+
     MemFree(renderer, sizeof(Renderer), MEMORY_TAG_STRUCT);
 }
 
@@ -326,3 +357,24 @@ void ResetRendererStats(Renderer* renderer)
     renderer->batchStats->quad_count = 0;
 }
 
+float angle = 0;
+
+void DrawModel(Model* model)
+{
+    for (u32 i = 0; i < model->mesh_count; i++)
+    {
+        angle += 25.0f * GetDeltaTimeMs();
+        auto modelmat = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), {0.0f, 1.0f,0.0f});
+        auto viewmat = glm::lookAt(glm::vec3{0.0f,0.0f,10.0f}, glm::vec3{0.0f,0.0f,0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+        // m4 modelmat = CreateIdentityMatrix4();
+        m4 projmat = CreatePerspectiveProjectionMatrix4(75.0f, (float)s_renderer->config.app->window->config.width,
+         (float)s_renderer->config.app->window->config.height, 0.1f, 1000.0f);
+
+        SetUniformMatrix4(s_renderer->rendereData->shader, "u_model", modelmat);
+        SetUniformMatrix4(s_renderer->rendereData->shader, "u_view", viewmat);
+        SetUniformMatrix4(s_renderer->rendereData->shader, "u_proj", projmat);
+        UseShaderProgram(s_renderer->rendereData->shader);
+        
+        DrawVertexArrayObject(model->vao[i], model->ibo[i]->indicesCount);
+    }   
+}

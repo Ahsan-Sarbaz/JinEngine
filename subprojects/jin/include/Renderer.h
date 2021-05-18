@@ -9,6 +9,7 @@
 #include "IndexBufferObject.h"
 #include "Texture.h"
 #include "ShaderProgram.h"
+#include "Model.h"
 
 struct Application;
 
@@ -57,11 +58,17 @@ struct BatchRendererData
     ShaderProgram* batchShader;
 };
 
+struct ThreeDRendererData
+{
+    ShaderProgram* shader;
+};
+
 struct Renderer
 {
     RendererConfiguration config;
     BatchRendererData* batchData;
     BatchRendererStats* batchStats;
+    ThreeDRendererData* rendereData;
 };
 
 Renderer* CreateRenderer(const RendererConfiguration& config);
@@ -75,3 +82,7 @@ void UploadCurrentBatch(Renderer* renderer);
 void DrawCurrentBatch(Renderer* renderer);
 void DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count);
 void ResetRendererStats(Renderer* renderer);
+
+// 3D renderer
+
+void DrawModel(Model* model);

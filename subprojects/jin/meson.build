@@ -29,22 +29,25 @@ sources += 'src/Time.cpp'
 sources += 'src/Entity.cpp'
 sources += 'src/Maths.cpp'
 sources += 'src/Event.cpp'
+sources += 'src/Mesh.cpp'
+sources += 'src/Model.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')
 gl_dep = dependency('gl')
+assimp_dep = dependency('assimp')
 imgui = subproject('imgui')
 imgui_dep = imgui.get_variable('imgui_dep')
 
 args = []
 args+='-g'
-args+='-O0'
+args+='-Og'
 args+='-Wno-everything'
 
 
 jin = library('jin',
     sources,
-    dependencies: [glfw_dep, glew_dep, gl_dep, imgui_dep],
+    dependencies: [glfw_dep, glew_dep, gl_dep, assimp_dep, imgui_dep],
     include_directories: include_dirs,
     cpp_args: args
 )

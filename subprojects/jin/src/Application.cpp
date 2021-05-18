@@ -179,8 +179,10 @@ void DeleteApplication(Application* app)
         DeleteLayer(app->layers[i]);
     }
 
+
     DeleteRenderer(app->renderer);
     DeleteWindow(app->window);
+    
     glfwTerminate();
     MemFree(app, sizeof(Application), MEMORY_TAG_STRUCT);
     LOG_INFO("Application delete Success!\n");
@@ -224,7 +226,7 @@ void RunApplication(Application* app)
         }
 
         glViewport(0, 0, app->config.windowConfig.width, app->config.windowConfig.height);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
         if(app->config.enable_imgui)
         {
@@ -233,13 +235,13 @@ void RunApplication(Application* app)
             ImGui::NewFrame();
         }
 
-        StartNewBatch(app->renderer);
 
         for(int i = app->layersCount; i > 0; --i)
         {
             app->layers[i - 1]->config.onUpdate(app);
         }
 
+        StartNewBatch(app->renderer);
         for(auto& entity : registry.view<SpriteComponent>())
         {
             auto& tranfrom = registry.get<TransformComponent>(entity);
@@ -257,7 +259,6 @@ void RunApplication(Application* app)
             anim.spriteSheetAnimation->sprite_sheet->rects[anim.spriteSheetAnimation->layout.current_frame]);
             UpdateSpriteSheetAnimation(anim.spriteSheetAnimation);
         }
-
         DrawCurrentBatch(app->renderer);
 
         if(app->config.enable_imgui)

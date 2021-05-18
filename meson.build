@@ -9,6 +9,9 @@ jin_dep = jin.get_variable('jin_dep')
 imgui = subproject('imgui')
 imgui_dep = imgui.get_variable('imgui_dep')
 
+assimp_dep = dependency('assimp')
+
+
 sokubak_src = []
 sokubak_src += 'src/main.cpp'
 sokubak_src += 'src/MainLayer.cpp'
@@ -18,7 +21,7 @@ sokuban_inc_dir = include_directories(['include'])
 
 args = []
 args+='-g'
-args+='-O0'
+args+='-Og'
 args+='-Wno-everything'
 
-executable('sokuban', sokubak_src, include_directories: sokuban_inc_dir, dependencies: [imgui_dep, jin_dep], cpp_args: args)
+executable('sokuban', sokubak_src, include_directories: sokuban_inc_dir, dependencies: [imgui_dep, jin_dep, assimp_dep], cpp_args: args)

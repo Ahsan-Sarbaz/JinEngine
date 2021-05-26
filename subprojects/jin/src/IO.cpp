@@ -1,6 +1,6 @@
 #include "IO.h"
 #include "Logger.h"
-#include "Memory.h"
+
 #include <stdio.h>
 #include "stb_image.h"
 
@@ -16,7 +16,7 @@ b8 ReadFileToBuffer(const char* path, char** buffer, int* size)
 
     fseek(file, 0, SEEK_END);
     *size = ftell(file);
-    *buffer = (char*)MemAlloc(*size, MEMORY_TAG_FILE_IO);
+    *buffer = (char*)malloc(*size);
     rewind(file);
     fread(*buffer, *size, 1, file);
     fclose(file);
@@ -25,12 +25,12 @@ b8 ReadFileToBuffer(const char* path, char** buffer, int* size)
 
 void FreeFileBuffer(char** buffer, int size)
 {
-    MemFree(*buffer, size, MEMORY_TAG_FILE_IO);
+    free(*buffer);
 }
 
 void FreeTextureBuffer(unsigned char** buffer, int size)
 {
-    MemFree(*buffer, size, MEMORY_TAG_TEXTURE_BUFFER);
+    free(*buffer);
 }
 
 b8 WriteBufferToFile(const char* path, char** buffer, int size)
@@ -73,7 +73,7 @@ b8 ReadTextureToBuffer(const char* path, unsigned char** buffer, int* size, int*
 
     fseek(file, 0, SEEK_END);
     *size = ftell(file);
-    *buffer = (unsigned char*)MemAlloc(*size, MEMORY_TAG_TEXTURE_BUFFER);
+    *buffer = (unsigned char*)malloc(*size);
     rewind(file);
     fread(*buffer, *size, 1, file);
     fclose(file);

@@ -1,48 +1,38 @@
 #include "VertexArrayObject.h"
-#include "Memory.h"
 #include "Logger.h"
 #include "VertexBufferObject.h"
 #include "IndexBufferObject.h"
 #include <GL/glew.h>
 
-VertexArrayObject* CreateVertexArrayObject()
+void VertexArrayObject::Init()
 {
-    VertexArrayObject* vao = (VertexArrayObject*)MemAlloc(sizeof(VertexArrayObject), MEMORY_TAG_STRUCT);
-    glGenVertexArrays(1, &vao->id);
-    return vao;
+    glGenVertexArrays(1, &id);
 }
 
-void DeleteVertexArrayobject(VertexArrayObject* vao)
+void VertexArrayObject::PushVertexBuffer(VertexBufferObject* vbo)
 {
-    glDeleteVertexArrays(1, &vao->id);
-    MemFree(vao, sizeof(VertexArrayObject), MEMORY_TAG_STRUCT);
-}
-
-void PushVertexBufferIntoVertexArrayObject(VertexArrayObject* vao, VertexBufferObject* vbo)
-{
-    BindVertexArrayObject(vao);
-    BindVertexBufferObject(vbo);
-    for (u32 i = 0; i < vbo->layoutCount; i++)
+    Bind();
+    vbo->Bind();
+    for (u32 i = 0; i < vbo->GetLayoutCount(); ++i)
     {
-        VertexBufferObjectLayout layout = vbo->layout[i];
+        VertexBufferObjectLayout layout = vbo->GetLayout(i);
         glVertexAttribPointer(layout.index, layout.size, layout.type, layout.normalized, layout.stride, layout.pointer);
         glEnableVertexAttribArray(layout.index);
     }
 }
 
-void PushIndexBufferIntoVertexArrayObject(VertexArrayObject* vao, IndexBufferObject* ibo)
+void VertexArrayObject::PushIndexBuffer(IndexBufferObject* ibo)
 {
-    BindVertexArrayObject(vao);
-    BindIndexBufferObject(ibo);
+    Bind();
+    ibo->Bind();
 }
 
-void BindVertexArrayObject(VertexArrayObject* vao)
+void VertexArrayObject::Bind()
 {
-    glBindVertexArray(vao->id);    
+    glBindVertexArray(id);    
 }
 
-void UnbindVertexArrayObject()
+void VertexArrayObject::Unbind()
 {
     glBindVertexArray(0);
 }
-

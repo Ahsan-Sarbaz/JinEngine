@@ -16,12 +16,17 @@ struct SpriteSheetAnimationLayout
 };
 
 
-struct SpriteSheetAnimation
+class SpriteSheetAnimation
 {
+    private:
     SpriteSheet* sprite_sheet;
     SpriteSheetAnimationLayout layout;
-};
 
-SpriteSheetAnimation* CreateSpriteSheetAnimation(SpriteSheet* sprite_sheet, const SpriteSheetAnimationLayout& layout);
-void DeleteSpriteSheetAnimation(SpriteSheetAnimation* ss_animation);
-void UpdateSpriteSheetAnimation(SpriteSheetAnimation* ss_animation);
+    public:
+    SpriteSheetAnimation() = default;
+    void Init(SpriteSheet* sprite_sheet, const SpriteSheetAnimationLayout& layout);
+    void Update();
+
+    inline SpriteSheet* GetSpriteSheet() { return sprite_sheet; }
+    inline SpriteSheetAnimationLayout GetLayout() { return layout; }
+};

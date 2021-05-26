@@ -1,53 +1,44 @@
 #include "VertexBufferObject.h"
-#include "Memory.h"
 #include "Logger.h"
 #include <GL/glew.h>
 
-VertexBufferObject* CreateVertexBufferObject(VertexBufferObjectType type)
+void VertexBufferObject::Init(VertexBufferObjectType _type)
 {
-    VertexBufferObject* vbo = (VertexBufferObject*)MemAlloc(sizeof(VertexBufferObject), MEMORY_TAG_STRUCT);
-    vbo->type = type;
-    glGenBuffers(1, &vbo->id);
-    return vbo; 
+    type = _type;
+    glGenBuffers(1, &id);
 }
 
-void DeleteVertexBufferObject(VertexBufferObject* vbo)
+void VertexBufferObject::Bind()
 {
-    glDeleteBuffers(1, &vbo->id);
-    MemFree(vbo, sizeof(VertexBufferObject), MEMORY_TAG_STRUCT);
+    glBindBuffer(GL_ARRAY_BUFFER, id);
 }
 
-void BindVertexBufferObject(VertexBufferObject* vbo)
+void VertexBufferObject::SetLayout(VertexBufferObjectLayout* layouts, int count)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, vbo->id);
+    layout = layouts;
+    layoutCount = count;
 }
 
-void SetVertexBufferObjectLayout(VertexBufferObject* vbo, VertexBufferObjectLayout* layouts, int count)
-{
-    vbo->layout = layouts;
-    vbo->layoutCount = count;
-}
-
-void UnbindVertexBufferObject()
+void VertexBufferObject::Unbind()
 {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void SetVertexBufferObjectData(VertexBufferObject* vbo, u32 size, void* data)
+void VertexBufferObject::SetData(u32 size, void* data)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, vbo->id);
-    glBufferData(GL_ARRAY_BUFFER, size, data, vbo->type);
+    glBindBuffer(GL_ARRAY_BUFFER, id);
+    glBufferData(GL_ARRAY_BUFFER, size, data, type);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void SetVertexBufferObjectSubData(VertexBufferObject* vbo, u32 size, u32 offset, void* data)
+void VertexBufferObject::SetSubData(u32 size, u32 offset, void* data)
 {
-    if(vbo->type == VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW)
+    if(type == VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW)
     {
         LOG_ERROR("Cannot set sub data of a static vertex buffer\n");
         return;
     }
-    glBindBuffer(GL_ARRAY_BUFFER, vbo->id);
+    glBindBuffer(GL_ARRAY_BUFFER, id);
     glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

@@ -24,5 +24,7 @@ Layer* GetImGUILayer(Application* app)
     config.onUpdate = ImGUILayerUpdate;
     config.onEnd = ImGUILayerEnd;
 
-    return CreateLayer(config);
+    auto layer = new Layer();
+    layer->Init(config);
+    return layer;
 }

@@ -15,19 +15,22 @@ enum IndexBufferObjectType
     INDEX_BUFFER_OBJECT_TYPE_DYNAMIC_COPY =  0x88EA
 };
 
-struct IndexBufferObject
+class IndexBufferObject
 {
+private:
     u32 id;
     IndexBufferObjectType type;
     u32 indicesCount;
+public:
+    IndexBufferObject() = default;
+    void Init(IndexBufferObjectType type);
+    void Bind();
+    void Unbind();
+    void SetData(u32 size, void* data);
+    void SetSubData(u32 size, u32 offset, void* data);
+    void SetCount(u32 count);
+    
+    inline u32 GetCount() { return indicesCount; }
 };
 
 typedef IndexBufferObject IBO;
-
-IndexBufferObject* CreateIndexBufferObject(IndexBufferObjectType type);
-void DeleteIndexBufferObject(IndexBufferObject* ibo);
-void BindIndexBufferObject(IndexBufferObject* ibo);
-void UnbindIndexBufferObject();
-void SetIndexBufferObjectData(IndexBufferObject* ibo, u32 size, void* data);
-void SetIndexBufferObjectSubData(IndexBufferObject* ibo, u32 size, u32 offset, void* data);
-void SetIndexBufferIndicesCount(IndexBufferObject* ibo, u32 count);

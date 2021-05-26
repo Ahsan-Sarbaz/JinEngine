@@ -1,51 +1,49 @@
 #include "Shader.h"
-#include "Memory.h"
 #include "Logger.h"
 #include "IO.h"
 #include <GL/glew.h>
+#include <stdlib.h>
 
-Shader* CreateShader(ShaderType type)
+void Shader::Init(ShaderType type)
 {
-    Shader* shader = (Shader*)MemAlloc(sizeof(Shader), MEMORY_TAG_STRUCT);
-    shader->id = glCreateShader(type);
-    return shader;
+    id = glCreateShader(type);
 }
 
-void DeleteShader(Shader* shader)
+// void DeleteShader(Shader* shader)
+// {
+//     if(shader == nullptr)
+//     {
+//         LOG_ERROR("Trying to delete a null shader\n");
+//         return;
+//     }
+//     glDeleteShader(shader->id);
+//     MemFree(shader, sizeof(shader), MEMORY_TAG_STRUCT);
+// }
+
+void Shader::SetSource(char** buffer)
 {
-    if(shader == nullptr)
-    {
-        LOG_ERROR("Trying to delete a null shader\n");
-        return;
-    }
-    glDeleteShader(shader->id);
-    MemFree(shader, sizeof(shader), MEMORY_TAG_STRUCT);
+    glShaderSource(id, 1, buffer, 0);
 }
 
-void SetShaderSource(Shader* shader, char** buffer)
+b8 Shader::Compile()
 {
-    glShaderSource(shader->id, 1, buffer, 0);
-}
-
-b8 CompileShader(Shader* shader)
-{
-    glCompileShader(shader->id);
+    glCompileShader(id);
     i32 compiled = 0;
-    glGetShaderiv(shader->id, GL_COMPILE_STATUS, &compiled);
+    glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
     if(compiled != GL_TRUE)
     {   
         i32 info_log_len = 0;
-        glGetShaderiv(shader->id, GL_INFO_LOG_LENGTH, &info_log_len);
-        char* info_log_buffer = (char*)MemAlloc(sizeof(char) * info_log_len, MEMORY_TAG_STRING_BUFFER);
-        glGetShaderInfoLog(shader->id, info_log_len, 0, info_log_buffer);
-        LOG_ERROR("%s: %s\n",ShaderTypeToString(shader->type), info_log_buffer);
-        MemFree(info_log_buffer, sizeof(char) * info_log_len, MEMORY_TAG_STRING_BUFFER);
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &info_log_len);
+        char* info_log_buffer = (char*)malloc(sizeof(char) * info_log_len);
+        glGetShaderInfoLog(id, info_log_len, 0, info_log_buffer);
+        LOG_ERROR("%s: %s\n", Shader::TypeToString(type), info_log_buffer);
+        free(info_log_buffer);
         return FALSE;
     }
     return TRUE;
 }
 
-const char* ShaderTypeToString(ShaderType type)
+const char* Shader::TypeToString(ShaderType type)
 {
     switch(type)
     {
@@ -57,14 +55,13 @@ const char* ShaderTypeToString(ShaderType type)
     return "UNKNOWN SHADER TYPE";
 }
 
-b8 SetShaderSourceFromFile(Shader* shader, const char* path)
+b8 Shader::SetSourceFromFile(const char* path)
 {
-
     char* buffer = 0;
     int size = 0;
     b8 res = ReadFileToBuffer(path, &buffer, &size);
     if(!res) return res;
-    SetShaderSource(shader, &buffer);
+    Shader::SetSource(&buffer);
     FreeFileBuffer(&buffer, size);
     return res;
 }

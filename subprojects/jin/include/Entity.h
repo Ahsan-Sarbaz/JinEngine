@@ -4,15 +4,17 @@
 #include "SpriteSheetAnimation.h"
 #include "Components.h"
 
-struct Entity
+class Entity
 {
     entt::entity id;
-};
+    
+    public:
+    Entity(const char* name);
+    ~Entity();
+    inline entt::entity GetId() { return id; }
 
-Entity CreateEntity(const char* name);
-void DeleteEntity(Entity entity);
-Entity CreateSpriteEntity(const char* name, Texture* t, const TransformComponent& transform);
-Entity CreateSpriteSheetAnimationEntity(const char* name, SpriteSheetAnimation* anim, const TransformComponent& transform);
-// TODO: think about pointer to registry
+    static Entity CreateSpriteEntity(const char* name, Texture* t, const TransformComponent& transform);
+    static Entity CreateSpriteSheetAnimationEntity(const char* name, SpriteSheetAnimation* anim, const TransformComponent& transform);
+};
 
 entt::registry&& GetEnTTRegistry();

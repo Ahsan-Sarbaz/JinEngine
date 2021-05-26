@@ -36,22 +36,26 @@ enum VertexBufferObjectType
     VERTEX_BUFFER_OBJECT_TYPE_DYNAMIC_COPY =  0x88EA
 };
 
-struct VertexBufferObject
+class VertexBufferObject
 {
+private:
     u32 id;
     VertexBufferObjectLayout* layout;
     u32 layoutCount;
     VertexBufferObjectType type;
+
+public:
+    VertexBufferObject() = default;
+    void Init(VertexBufferObjectType type);
+    void Bind();
+    void Unbind();
+    void SetLayout(VertexBufferObjectLayout* layouts, int count);
+    void SetData(u32 size, void* data);
+    /// call SetData(vbo, size, nullptr) before calling this data=nullptr
+    void SetSubData(u32 size, u32 offset, void* data);
+    u32 GetLayoutCount() { return layoutCount;};
+    VertexBufferObjectLayout GetLayout(u32 index) { return layout[index]; }
 };
 
 typedef VertexBufferObject VBO;
 typedef VertexBufferObjectLayout VBOLayout;
-
-VertexBufferObject* CreateVertexBufferObject(VertexBufferObjectType type);
-void DeleteVertexBufferObject(VertexBufferObject* vbo);
-void BindVertexBufferObject(VertexBufferObject* vbo);
-void UnbindVertexBufferObject();
-void SetVertexBufferObjectLayout(VertexBufferObject* vbo, VertexBufferObjectLayout* layouts, int count);
-void SetVertexBufferObjectData(VertexBufferObject* vbo, u32 size, void* data);
-/// call SetVertexBufferObjectData(vbo, size, nullptr) before calling this data=nullptr
-void SetVertexBufferObjectSubData(VertexBufferObject* vbo, u32 size, u32 offset, void* data);

@@ -63,26 +63,41 @@ struct ThreeDRendererData
     ShaderProgram* shader;
 };
 
-struct Renderer
+class Renderer
 {
     RendererConfiguration config;
     BatchRendererData* batchData;
     BatchRendererStats* batchStats;
-    ThreeDRendererData* rendereData;
+    ThreeDRendererData* rendererData;
+
+    public:
+    Renderer() = default;
+
+    void Init(const RendererConfiguration& config);
+    void DrawQuad(const v2& position, const v2& size, const v4& color);
+    void DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
+    void DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
+    void StartNewBatch();
+    void UploadCurrentBatch();
+    void DrawCurrentBatch();
+    void DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count);
+    void ResetRendererStats();
+    
+    
+    // 3D renderer
+
+    void DrawModel(Model* model);
+
+    inline RendererConfiguration* GetConfig() { return &config; }
+    inline BatchRendererData* GetBatchData() { return batchData; }
+    inline BatchRendererStats* GetBatchStats() { return batchStats; }
+    inline ThreeDRendererData* Get3DData() { return rendererData; }
+
+    private:
+    
+    void AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor);
+    void AddTexturedQuadToBuffer(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor, const v4& color);
+
+  
 };
 
-Renderer* CreateRenderer(const RendererConfiguration& config);
-void DeleteRenderer(Renderer* renderer);
-
-void DrawQuad(const v2& position, const v2& size, const v4& color);
-void DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
-void DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
-void StartNewBatch(Renderer* renderer);
-void UploadCurrentBatch(Renderer* renderer);
-void DrawCurrentBatch(Renderer* renderer);
-void DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count);
-void ResetRendererStats(Renderer* renderer);
-
-// 3D renderer
-
-void DrawModel(Model* model);

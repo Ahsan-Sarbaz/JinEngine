@@ -16,19 +16,28 @@ struct ApplicationConfiguration
     b8 enable_imgui;
 };
 
-
-struct Application
+class Application
 {
-    ApplicationConfiguration config;
-    Window* window;
-    Layer* layers[32];
-    u32 layersCount;
-    Renderer* renderer;
-    std::vector<Event>* events;
-    std::vector<EventListener>* event_listners;
-};
+    private:
+        ApplicationConfiguration config;
+        Window* window;
+        Layer* layers[32];
+        u32 layersCount;
+        Renderer* renderer;
+        std::vector<Event> events;
+        std::vector<EventListener> event_listners;
 
-Application* CreateApplication(const ApplicationConfiguration& config);
-void DeleteApplication(Application* app);
-void RunApplication(Application* app);
-void ApplicationAttachLayer(Application* app, Layer* layer);
+    public:
+        Application() = default;
+        ~Application();
+        void Init(const ApplicationConfiguration& config);
+        void Run();
+        void AttachLayer(Layer* layer);
+        void AddEvent(Event e);
+        void AddEventListener(EventListener listener);
+        
+        inline ApplicationConfiguration* GetConfig() { return &config; }
+        inline Window* GetWindow() { return window; }
+        inline u32 GetLayerCount() { return layersCount; }
+        inline Renderer* GetRenderer() { return renderer; }
+};

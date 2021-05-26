@@ -17,7 +17,8 @@ int main()
     config.enable_imgui = 1;
 
     
-    Application* app = CreateApplication(config);
+    Application* app = new Application();
+    app->Init(config);
     if(app == nullptr)
     {
         LOG_FATAL("Failed to create Application!\n");
@@ -26,25 +27,12 @@ int main()
 
     LOG_INFO("Application creation Successful!\n");
 
-    ApplicationAttachLayer(app, GetImGUILayer(app));
-    ApplicationAttachLayer(app, GetMainLayer(app));
+    app->AttachLayer(GetImGUILayer(app));
+    app->AttachLayer(GetMainLayer(app));
 
-    RunApplication(app);
-    DeleteApplication(app);
+    app->Run();
 
-    auto memory_state = GetMemoryState();
-    if(memory_state->total_memory > 0)
-    {
-        LOG_WARN("There is a memory leak\n");
-        for(i32 i = 0; i < MEMORY_TAG_COUNT; ++i)
-        {
-            if(memory_state->memory_tag[i] > 0)
-            {
-                LOG_WARN("Leak in %s of size %lld\n", MemoryTagToString((MEMORY_TAG)i), memory_state->memory_tag[i]);
-            }
-        }
-        return -2;
-    }
+    delete app;
 
     return 0;
 }

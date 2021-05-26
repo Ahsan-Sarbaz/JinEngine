@@ -1,52 +1,44 @@
 #include "IndexBufferObject.h"
-#include "Memory.h"
+ 
 #include "Logger.h"
 #include <GL/glew.h>
 
-IndexBufferObject* CreateIndexBufferObject(IndexBufferObjectType type)
+void IndexBufferObject::Init(IndexBufferObjectType _type)
 {
-    IndexBufferObject* ibo = (IndexBufferObject*)MemAlloc(sizeof(IndexBufferObject), MEMORY_TAG_STRUCT);
-    ibo->type = type;
-    glGenBuffers(1, &ibo ->id);
-    return ibo ; 
+    type = _type;
+    glGenBuffers(1, &id);
 }
 
-void DeleteIndexBufferObject(IndexBufferObject* ibo )
+void IndexBufferObject::Bind()
 {
-    glDeleteBuffers(1, &ibo ->id);
-    MemFree(ibo , sizeof(IndexBufferObject), MEMORY_TAG_STRUCT);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 }
 
-void BindIndexBufferObject(IndexBufferObject* ibo )
-{
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->id);
-}
-
-void UnbindIndexBufferObject()
+void IndexBufferObject::Unbind()
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void SetIndexBufferObjectData(IndexBufferObject* ibo, u32 size, void* data)
+void IndexBufferObject::SetData(u32 size, void* data)
 {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, ibo->type);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, type);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void SetIndexBufferObjectSubData(IndexBufferObject* ibo, u32 size, u32 offset, void* data)
+void IndexBufferObject::SetSubData(u32 size, u32 offset, void* data)
 {
-    if(ibo->type == INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW)
+    if(type == INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW)
     {
         LOG_ERROR("Cannot set sub data of a static index buffer\n");
         return;
     }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, data);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void SetIndexBufferIndicesCount(IndexBufferObject* ibo, u32 count)
+void IndexBufferObject::SetCount(u32 count)
 {
-    ibo->indicesCount = count;
+    indicesCount = count;
 }

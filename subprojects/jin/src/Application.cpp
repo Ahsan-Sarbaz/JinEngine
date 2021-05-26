@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#include "Memory.h"
 #include "Logger.h"
 #include "Renderer.h"
 #include "Time.h"
@@ -26,14 +25,14 @@ static void glfw_error_callback(int error, const char* description)
 static void glfw_window_framebuffer_resize(GLFWwindow* window, int width, int height)
 {
     auto app =  (Application*)glfwGetWindowUserPointer(window);
-    app->config.windowConfig.width = width;
-    app->config.windowConfig.height = height;
+    app->GetConfig()->windowConfig.width = width;
+    app->GetConfig()->windowConfig.height = height;
 
     Event e = {};
     e.type = EVENT_TYPE_WINDOW_RESIZE;
     e.data.signed_int[0] = width;
     e.data.signed_int[1] = height;
-    app->events->push_back(e);
+    app->AddEvent(e);
 }
 
 static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int action, int mod)
@@ -54,8 +53,8 @@ static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int act
     {
         e.type = EVENT_TYPE_KEYBOARD_KEY_RELEASE;
     }    
-    
-    app->events->emplace_back(e);
+
+    app->AddEvent(e);
 }
 
 static void glfw_cursor_pos_callback(GLFWwindow* window, double x, double y)
@@ -65,7 +64,7 @@ static void glfw_cursor_pos_callback(GLFWwindow* window, double x, double y)
     e.type = EVENT_TYPE_MOUSE_MOVE;
     e.data.real_double[0] = x;
     e.data.real_double[1] = y;
-    app->events->push_back(e);
+    app->AddEvent(e);
 }
 
 static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mod)
@@ -85,14 +84,13 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
     {
         e.type = EVENT_TYPE_MOUSE_BUTTON_RELEASE;
     }    
-    
-    app->events->emplace_back(e);
+
+    app->AddEvent(e);
 }
 
-Application* CreateApplication(const ApplicationConfiguration& config)
+void  Application::Init(const ApplicationConfiguration& _config)
 {
-    Application* app = (Application*)MemAlloc(sizeof(Application), MEMORY_TAG_STRUCT);
-    app->config = config;
+    this->config = _config;
 
     auto time = GetTimeInternal();
     *time = new Time;
@@ -103,50 +101,48 @@ Application* CreateApplication(const ApplicationConfiguration& config)
     if(glfwInit() != GLFW_TRUE)
     {
         LOG_FATAL("GLFW INIT Failed Cannot Continue!\n");
-        return nullptr;
     }
 
     LOG_INFO("GLFW INIT SUCCESS!\n");
-    if(config.opengl_version_major == 0)
+    if(_config.opengl_version_major == 0)
     {
-        app->config.opengl_version_major = 3;
-        app->config.opengl_version_minor = 3;
+        config.opengl_version_major = 3;
+        config.opengl_version_minor = 3;
     }
 
-    app->config.windowConfig.gl_contex_version_major = app->config.opengl_version_major;
-    app->config.windowConfig.gl_contex_version_minor = app->config.opengl_version_minor;
+    config.windowConfig.gl_contex_version_major = config.opengl_version_major;
+    config.windowConfig.gl_contex_version_minor = config.opengl_version_minor;
     
-    app->window = CreateWindow(app->config.windowConfig);
+    window = new Window();
+    window->Init(config.windowConfig);
 
-    if(app->window == nullptr)
+    if(this->window == nullptr)
     {
         LOG_FATAL("Failed to Create Window Cannot Continue\n");
-        return nullptr;
     }
     
-    glfwSetWindowUserPointer(app->window->handle, app);
-    glfwSetFramebufferSizeCallback(app->window->handle, glfw_window_framebuffer_resize);
-    glfwSetKeyCallback(app->window->handle, glfw_key_callback);
-    glfwSetCursorPosCallback(app->window->handle, glfw_cursor_pos_callback);
-    glfwSetMouseButtonCallback(app->window->handle, glfw_mouse_button_callback);
+    glfwSetWindowUserPointer(window->GetHandle(), this);
+    glfwSetFramebufferSizeCallback(window->GetHandle(), glfw_window_framebuffer_resize);
+    glfwSetKeyCallback(window->GetHandle(), glfw_key_callback);
+    glfwSetCursorPosCallback(window->GetHandle(), glfw_cursor_pos_callback);
+    glfwSetMouseButtonCallback(window->GetHandle(), glfw_mouse_button_callback);
 
     /// update the window size if the window creation changed it
-    app->config.windowConfig.width = app->window->config.width;
-    app->config.windowConfig.height = app->window->config.height;
+    this->config.windowConfig.width = window->GetConfig()->width;
+    this->config.windowConfig.height = window->GetConfig()->height;
 
-    LOG_INFO("Created Window Successfuly %dx%d : %s\n", app->config.windowConfig.width, app->config.windowConfig.height, app->config.windowConfig.title);
+    LOG_INFO("Created Window Successfuly %dx%d : %s\n", config.windowConfig.width, config.windowConfig.height, config.windowConfig.title);
     if(glewInit() != GLEW_OK)
     {
         LOG_FATAL("GLEW INIT Failed Cannot Continue!\n");
-        return nullptr;
     }
 
     LOG_INFO("GLEW INIT SUCCESS! USING RENDERER: %s\n", glGetString(GL_RENDERER));
     LOG_INFO("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-    app->config.enable_imgui = app->config.enable_imgui ? ENABLE_IMGUI : 0;
+    config.enable_imgui = config.enable_imgui ? ENABLE_IMGUI : 0;
 
-    if(app->config.enable_imgui)
+    if(config.enable_imgui)
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -154,49 +150,37 @@ Application* CreateApplication(const ApplicationConfiguration& config)
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
         ImGui::StyleColorsDark();
-        ImGui_ImplGlfw_InitForOpenGL(app->window->handle, true);
+        ImGui_ImplGlfw_InitForOpenGL(window->GetHandle(), true);
         const char* glsl_version = "#version 130";
         ImGui_ImplOpenGL3_Init(glsl_version);
     }
 
     RendererConfiguration rendererConfig = {};
-    rendererConfig.app = app;
+    rendererConfig.app = this;
     rendererConfig.renderer_resolution_x = config.windowConfig.width;
     rendererConfig.renderer_resolution_y = config.windowConfig.height;
     rendererConfig.enable_batch_renderering = TRUE;
     rendererConfig.batch_renderer_max_quads = 100;
-    app->renderer = CreateRenderer(rendererConfig);
-
-    InitEventSystem(app);
-    return app;
+    renderer = new Renderer();
+    renderer->Init(rendererConfig);
 }
 
-void DeleteApplication(Application* app)
+Application::~Application()
 {
-    for(u32 i = 0; i < app->layersCount; ++i)
-    {
-        LOG_INFO("Deleting Layer: %s\n", app->layers[i]->config.name);
-        DeleteLayer(app->layers[i]);
-    }
 
-
-    DeleteRenderer(app->renderer);
-    DeleteWindow(app->window);
-    
+    delete renderer;
+    glfwDestroyWindow(window->GetHandle());
+    delete window;
     glfwTerminate();
-    MemFree(app, sizeof(Application), MEMORY_TAG_STRUCT);
-    LOG_INFO("Application delete Success!\n");
 }
 
-void RunApplication(Application* app)
+void  Application::Run()
 {
     glClearColor(0, 0, 0, 1);
 
-    for(int i = app->layersCount; i > 0; --i)
+    for(u32 i = layersCount; i > 0; --i)
     {
-        LOG_INFO("Starting Layer: %s\n", app->layers[i - 1]->config.name);
-        
-        app->layers[i - 1]->config.onStart(app);
+        layers[i - 1]->OnStart(this);
     }
 
     double current_time = glfwGetTime();
@@ -207,10 +191,22 @@ void RunApplication(Application* app)
 
     auto registry = GetEnTTRegistry();
 
-    while (!glfwWindowShouldClose(app->window->handle))
+    while (!glfwWindowShouldClose(window->GetHandle()))
     {
         glfwPollEvents();
-        PollEvents();
+    
+        for (auto &&listner : event_listners)
+        {
+            for (auto &&event : events)
+            {
+                if(listner.type == event.type)
+                {
+                    listner.callback(event);
+                }
+            }
+        }    
+
+        events.clear();
 
         current_time = glfwGetTime();
         delta_time = (current_time - prev_time);
@@ -220,15 +216,15 @@ void RunApplication(Application* app)
         (*time)->delta_time_ms = (delta_time * (*time)->time_scale);
 
         
-        if(glfwGetKey(app->window->handle, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        if(glfwGetKey(window->GetHandle(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
-            glfwSetWindowShouldClose(app->window->handle, 1);
+            glfwSetWindowShouldClose(window->GetHandle(), 1);
         }
 
-        glViewport(0, 0, app->config.windowConfig.width, app->config.windowConfig.height);
+        glViewport(0, 0, config.windowConfig.width, config.windowConfig.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-        if(app->config.enable_imgui)
+        if(config.enable_imgui)
         {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -236,18 +232,18 @@ void RunApplication(Application* app)
         }
 
 
-        for(int i = app->layersCount; i > 0; --i)
+        for(u32 i = layersCount; i > 0; --i)
         {
-            app->layers[i - 1]->config.onUpdate(app);
+            layers[i - 1]->OnUpdate(this);
         }
 
-        StartNewBatch(app->renderer);
+        renderer->StartNewBatch();
         for(auto& entity : registry.view<SpriteComponent>())
         {
             auto& tranfrom = registry.get<TransformComponent>(entity);
             auto& spriteCompnonent = registry.get<SpriteComponent>(entity);
 
-            DrawTexturedQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), spriteCompnonent.texture);
+            renderer->DrawTexturedQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), spriteCompnonent.texture);
         }
 
         for(auto& entity : registry.view<SpriteSheetAnimationComponent>())
@@ -255,53 +251,35 @@ void RunApplication(Application* app)
             auto& tranfrom = registry.get<TransformComponent>(entity);
             auto& anim = registry.get<SpriteSheetAnimationComponent>(entity);
 
-            DrawTexturedRectQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), anim.spriteSheetAnimation->sprite_sheet->config.texture, 
-            anim.spriteSheetAnimation->sprite_sheet->rects[anim.spriteSheetAnimation->layout.current_frame]);
-            UpdateSpriteSheetAnimation(anim.spriteSheetAnimation);
+            renderer->DrawTexturedRectQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), anim.spriteSheetAnimation->GetSpriteSheet()->GetConfig().texture, 
+            anim.spriteSheetAnimation->GetSpriteSheet()->GetRect(anim.spriteSheetAnimation->GetLayout().current_frame));
+            anim.spriteSheetAnimation->Update();
         }
-        DrawCurrentBatch(app->renderer);
+        renderer->DrawCurrentBatch();
 
-        if(app->config.enable_imgui)
+        if(config.enable_imgui)
         {
             if(ImGui::Begin("Debug"))
             {
                 ImGui::Text("Attached Layers");
-                for(int i = app->layersCount; i > 0; --i)
+                for(u32 i = layersCount; i > 0; --i)
                 {
-                    ImGui::Text("Layer: %s", app->layers[i - 1]->config.name);
-                }
-                auto memory_state = GetMemoryState();
-                ImGui::Separator();
-                if(ImGui::TreeNode("Memory"))
-                {
-                    ImGui::Text("Total : %d B, %.2f KB, %.2f MB", 
-                    memory_state->total_memory, (float)memory_state->total_memory / 1024, (float)memory_state->total_memory / (1024 * 1024));
-                    ImGui::Text("Overall : %d B, %.2f KB, %.2f MB", 
-                    memory_state->memory_consumption, (float)memory_state->memory_consumption/ 1024, (float)memory_state->memory_consumption / (1024 * 1024));    
-                    for (i32 i = 0; i < MEMORY_TAG_COUNT; i++)
-                    {
-                        ImGui::Text("\t%s : %d B, %.2f KB, %.2f MB",
-                        MemoryTagToString((MEMORY_TAG)i), memory_state->memory_tag[i],
-                        (float)memory_state->memory_tag[i] / 1024, 
-                        (float)memory_state->memory_tag[i] / (1024 * 1024));
-                    }
-
-                    ImGui::TreePop();
+                    ImGui::Text("Layer: %s", layers[i - 1]->GetConfig().name);
                 }
 
                 if(ImGui::TreeNode("Batch Renderer Stats"))
                 {
-                    ImGui::Text("Max Quads Count: %d", app->renderer->batchStats->max_quad_count);
-                    ImGui::Text("Max Verts Count: %d", app->renderer->batchStats->max_vertex_count);
-                    ImGui::Text("Max Index Count: %d", app->renderer->batchStats->max_index_count);
-                    ImGui::Text("Draw Count P/F : %d", app->renderer->batchStats->draw_count);
-                    ImGui::Text("Quad Count P/F : %d", app->renderer->batchStats->quad_count);
-                    ImGui::Text("Verts Count P/F: %d", app->renderer->batchStats->vertex_count);
-                    ImGui::Text("Index Count P/F: %d", app->renderer->batchStats->index_count);
+                    ImGui::Text("Max Quads Count: %d", renderer->GetBatchStats()->max_quad_count);
+                    ImGui::Text("Max Verts Count: %d", renderer->GetBatchStats()->max_vertex_count);
+                    ImGui::Text("Max Index Count: %d", renderer->GetBatchStats()->max_index_count);
+                    ImGui::Text("Draw Count P/F : %d", renderer->GetBatchStats()->draw_count);
+                    ImGui::Text("Quad Count P/F : %d", renderer->GetBatchStats()->quad_count);
+                    ImGui::Text("Verts Count P/F: %d", renderer->GetBatchStats()->vertex_count);
+                    ImGui::Text("Index Count P/F: %d", renderer->GetBatchStats()->index_count);
                     ImGui::TreePop();
                 }
 
-                ResetRendererStats(app->renderer);
+                renderer->ResetRendererStats();
                 ImGui::Text("Enitites");
                 for(auto& entity : registry.view<TagComponent>())
                 {
@@ -321,14 +299,14 @@ void RunApplication(Application* app)
                     if((spriteSheetAnimComp = registry.try_get<SpriteSheetAnimationComponent>(entity)) != nullptr)
                     {
 
-                        ImGui::Text("Anim Name: %s", spriteSheetAnimComp->spriteSheetAnimation->layout.name);
-                        ImGui::Text("Anim Start: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.start_frame);
-                        ImGui::Text("Anim End: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.end_frame);
-                        ImGui::Text("Anim FPS: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.frames_per_second);
-                        ImGui::Text("Anim Total Time: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.total_time);
-                        ImGui::Text("Anim Time Accum: %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_accumulator);
-                        ImGui::Text("Anim Time Step:  %f", spriteSheetAnimComp->spriteSheetAnimation->layout.time_step);
-                        ImGui::Text("Anim Current Frame: %d", spriteSheetAnimComp->spriteSheetAnimation->layout.current_frame);
+                        ImGui::Text("Anim Name: %s", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().name);
+                        ImGui::Text("Anim Start: %d", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().start_frame);
+                        ImGui::Text("Anim End: %d", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().end_frame);
+                        ImGui::Text("Anim FPS: %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().frames_per_second);
+                        ImGui::Text("Anim Total Time: %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().total_time);
+                        ImGui::Text("Anim Time Accum: %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().time_accumulator);
+                        ImGui::Text("Anim Time Step:  %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().time_step);
+                        ImGui::Text("Anim Current Frame: %d", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().current_frame);
                         ImGui::Separator();                    
                     }
                 }
@@ -339,16 +317,15 @@ void RunApplication(Application* app)
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
         
-        glfwSwapBuffers(app->window->handle);
+        glfwSwapBuffers(window->GetHandle());
     }
 
-    for(int i = app->layersCount; i > 0; --i)
+    for(u32 i = layersCount; i > 0; --i)
     {
-        LOG_INFO("Ending Layer: %s\n", app->layers[i - 1]->config.name);
-        app->layers[i - 1]->config.onEnd(app);
+        layers[i - 1]->OnEnd(this);
     }
 
-    if(app->config.enable_imgui)
+    if(config.enable_imgui)
     {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -356,13 +333,23 @@ void RunApplication(Application* app)
     }
 }
 
-void ApplicationAttachLayer(Application* app, Layer* layer)
+void Application::AttachLayer(Layer* layer)
 {
     if(layer == nullptr)
     {
         LOG_ERROR("You are trying to attach a null Layer!\n");
         return;
     }
-    app->layers[app->layersCount] = layer;
-    app->layersCount++;
+    layers[layersCount] = layer;
+    layersCount++;
+}
+
+void Application::AddEvent(Event e)
+{
+    events.push_back(e);
+}
+
+void Application::AddEventListener(EventListener listener)
+{
+    event_listners.push_back(listener);
 }

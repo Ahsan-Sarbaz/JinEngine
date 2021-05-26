@@ -1,25 +1,23 @@
 #include "SpriteSheet.h"
 #include "Logger.h"
-#include "Memory.h"
 
-SpriteSheet* CreateSpriteSheet(const SpriteSheetConfiguration& config)
+void SpriteSheet::Init(const SpriteSheetConfiguration& _config)
 {
-    SpriteSheet* spriteSheet = (SpriteSheet*)MemAlloc(sizeof(SpriteSheet), MEMORY_TAG_STRUCT);
-    spriteSheet->config = config;
+    config = _config;
     
-    spriteSheet->sprites_per_row = spriteSheet->config.texture->width / spriteSheet->config.sprite_width;
-    spriteSheet->sprites_per_column = spriteSheet->config.texture->height / spriteSheet->config.sprite_height;
+    sprites_per_row = config.texture->GetWidth() / config.sprite_width;
+    sprites_per_column = config.texture->GetHeight() / config.sprite_height;
 
-    float tw = (float)spriteSheet->config.sprite_width / (float)spriteSheet->config.texture->width;
-    float th = (float)spriteSheet->config.sprite_height / (float)spriteSheet->config.texture->height;
+    float tw = (float)config.sprite_width / (float)config.texture->GetWidth();
+    float th = (float)config.sprite_height / (float)config.texture->GetHeight();
 
-    spriteSheet->sprites_count = spriteSheet->sprites_per_row * spriteSheet->sprites_per_column;
+    sprites_count = sprites_per_row * sprites_per_column;
 
-    spriteSheet->rects = (RectF*)MemAlloc(sizeof(RectF) * spriteSheet->sprites_count, MEMORY_TAG_STRUCT);
+    rects = std::vector<RectF>(sprites_count);
 
-    for (u32 x = 0; x < spriteSheet->sprites_per_row; x++)
+    for (u32 x = 0; x < sprites_per_row; x++)
     {
-        for (u32 y = 0; y < spriteSheet->sprites_per_column; y++)
+        for (u32 y = 0; y < sprites_per_column; y++)
         {
             auto rect = RectF{ 
                 (float) x * tw,
@@ -30,16 +28,13 @@ SpriteSheet* CreateSpriteSheet(const SpriteSheetConfiguration& config)
 
             // if(y * spriteSheet->sprites_per_row + x > spriteSheet->sprites_count)
             //     LOG_TRACE("We got a problem\n");
-            spriteSheet->rects[y * spriteSheet->sprites_per_row + x] = rect;
+            rects[y * sprites_per_row + x] = rect;
         }
     }
-    
-
-    return spriteSheet;
 }
 
-void DeleteSpriteSheet(SpriteSheet* spriteSheet)
-{
-    MemFree(spriteSheet->rects, sizeof(RectF) * spriteSheet->sprites_count, MEMORY_TAG_STRUCT);
-    MemFree(spriteSheet, sizeof(SpriteSheet), MEMORY_TAG_STRUCT);
-}
+// void DeleteSpriteSheet(SpriteSheet* spriteSheet)
+// {
+//     MemFree(spriteSheet->rects, sizeof(RectF) * spriteSheet->sprites_count, MEMORY_TAG_STRUCT);
+//     MemFree(spriteSheet, sizeof(SpriteSheet), MEMORY_TAG_STRUCT);
+// }

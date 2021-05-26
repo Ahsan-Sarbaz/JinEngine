@@ -6,17 +6,32 @@
 #include "VertexBufferObject.h"
 #include "IndexBufferObject.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 struct Model
 {
+private:
     std::vector<Mesh*> meshes;
     u32 mesh_count;
 
     std::vector<VAO*> vao;
     std::vector<VBO*> vbo;
     std::vector<IBO*> ibo;
-};
 
-Model* CreateModel();
-Model* CreateModelFromFile(const char* path);
-void DeleteModel(Model* model);
-void AddMeshToModel(Model* model, Mesh* mesh);
+public:
+    Model() = default;
+    void Init();
+    void InitFromFile(const char* path);
+    void AddMesh(Mesh* mesh);
+    inline u32 GetMeshCount() { return mesh_count; }
+    inline VAO* GetVAO(u32 index) { return vao[index]; }
+    inline VBO* GetVBO(u32 index) { return vbo[index]; }
+    inline IBO* GetIBO(u32 index) { return ibo[index]; }
+
+private:
+    void ProcessMesh(aiMesh* assimp_mesh, const aiScene* scene);
+    void ProcessNode(aiNode* node, const aiScene* scene);
+
+};

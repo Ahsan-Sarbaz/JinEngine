@@ -9,15 +9,18 @@ enum ShaderType
     SHADER_TYPE_GEOMETRY = 0x8DD9,
 };
 
-struct Shader
+class Shader
 {
+    private:
     u32 id;
     ShaderType type;
+    
+    public:
+    Shader() = default;
+    void Init(ShaderType type);
+    void SetSource(char** buffer);
+    b8 Compile();
+    b8 SetSourceFromFile(const char* path);
+    inline u32 GetId() { return id; }
+    static const char* TypeToString(ShaderType type);
 };
-
-Shader* CreateShader(ShaderType type);
-void DeleteShader(Shader* shader);
-void SetShaderSource(Shader* shader, char** buffer);
-b8 CompileShader(Shader* shader);
-const char* ShaderTypeToString(ShaderType type);
-b8 SetShaderSourceFromFile(Shader* shader, const char* path);

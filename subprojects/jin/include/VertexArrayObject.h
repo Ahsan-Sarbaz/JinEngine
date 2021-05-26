@@ -5,17 +5,18 @@ struct VertexBufferObject;
 struct IndexBufferObject;
 
 
-struct VertexArrayObject
+class VertexArrayObject
 {
+private:
     u32 id;
+public:
+    VertexArrayObject() = default;
+    void Init();
+    void PushVertexBuffer(VertexBufferObject* vbo);
+    void PushIndexBuffer(IndexBufferObject* ibo);
+    void Bind();
+    void Unbind();
+
 };
 
-
 typedef VertexArrayObject VAO;
-
-VertexArrayObject* CreateVertexArrayObject();
-void DeleteVertexArrayobject(VertexArrayObject* vao);
-void PushVertexBufferIntoVertexArrayObject(VertexArrayObject* vao, VertexBufferObject* vbo);
-void PushIndexBufferIntoVertexArrayObject(VertexArrayObject* vao, IndexBufferObject* ibo);
-void BindVertexArrayObject(VertexArrayObject* vao);
-void UnbindVertexArrayObject();

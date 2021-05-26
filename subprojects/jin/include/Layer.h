@@ -14,11 +14,15 @@ struct LayerConfiguration
     LayerEndFunc onEnd;
 };
 
-struct Layer
+class Layer
 {
+private:
     LayerConfiguration config;
+public:
+    Layer() = default;    
+    void  Init(const LayerConfiguration& config);
+    inline LayerConfiguration GetConfig() { return config; }
+    inline void OnStart(Application* app) { config.onStart(app); }
+    inline void OnUpdate(Application* app) { config.onUpdate(app); }
+    inline void OnEnd(Application* app) { config.onEnd(app); }
 };
-
-Layer* CreateLayer();
-Layer* CreateLayer(const LayerConfiguration& config);
-void DeleteLayer(Layer* layer);

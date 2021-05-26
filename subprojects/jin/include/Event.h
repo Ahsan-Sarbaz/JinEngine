@@ -67,9 +67,3 @@ struct EventListener
     EventType type;
     PFNEVENTCALLBACK callback;
 };
-
-struct Application;
-
-void InitEventSystem(Application* app);
-void RegisterListener(EventType type, PFNEVENTCALLBACK callback);
-void PollEvents();

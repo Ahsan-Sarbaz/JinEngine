@@ -14,12 +14,19 @@ struct WindowConfiguration
     b8 enable_context_core_profile;
 };
 
-struct Window
+class Window
 {
+    private:
     WindowConfiguration config;
     GLFWwindow* handle;
     GLFWmonitor* monitor;
-};
 
-Window* CreateWindow(const WindowConfiguration& config);
-void DeleteWindow(Window* window);
+    public:
+    Window() = default;
+
+    void Init(const WindowConfiguration& config);
+
+    WindowConfiguration* GetConfig() { return &config; }
+    GLFWwindow* GetHandle() { return handle; }
+    GLFWmonitor* GetMonitor() { return monitor; }
+};

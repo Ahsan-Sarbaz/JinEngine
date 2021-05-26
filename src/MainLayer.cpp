@@ -9,19 +9,19 @@
 Model* model;
 
 void MainLayerStart(Application* app)
-{
-    model = CreateModelFromFile("res/models/Car.dae");
+{  
+    model = new Model();
+    model->InitFromFile("res/models/Car.dae");
 }
-
 
 void MainLayerUpdate(Application* app)
 {   
-    DrawModel(model);
+    app->GetRenderer()->DrawModel(model);
 }
 
 void MainLayerEnd(Application* app)
 {
-    DeleteModel(model);
+    delete model;
 }
 
 Layer* GetMainLayer(Application* app)
@@ -32,5 +32,7 @@ Layer* GetMainLayer(Application* app)
     config.onUpdate = MainLayerUpdate;
     config.onEnd = MainLayerEnd;
 
-    return CreateLayer(config);
+    auto layer = new Layer();
+    layer->Init(config);
+    return layer;
 }

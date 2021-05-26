@@ -2,6 +2,7 @@
 #include "Types.h"
 #include "Texture.h"
 #include "Rect.h"
+#include <vector>
 
 struct SpriteSheetConfiguration
 {
@@ -11,14 +12,22 @@ struct SpriteSheetConfiguration
 };
 
 
-struct SpriteSheet
+class SpriteSheet
 {
+    private:
     SpriteSheetConfiguration config;
     u32 sprites_per_column;
     u32 sprites_per_row;
     u32 sprites_count;
-    RectF* rects;
-};
+    std::vector<RectF> rects;
 
-SpriteSheet* CreateSpriteSheet(const SpriteSheetConfiguration& config);
-void DeleteSpriteSheet(SpriteSheet* spriteSheet);
+    public:
+    SpriteSheet() = default;
+    void Init(const SpriteSheetConfiguration& config);
+
+    inline SpriteSheetConfiguration GetConfig() { return config; }
+    inline u32 GetSpritePerColumnCount() { return sprites_per_column; }
+    inline u32 GetSpritePerRowCount() { return sprites_per_row; }
+    //inline RectF* GetRects() { return rects; }
+    inline RectF GetRect(i32 index) { return rects[index]; }
+};

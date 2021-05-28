@@ -1,6 +1,6 @@
 #include "Mesh.h"
 
-void Mesh::Init(u32 vertices_count, u32 indices_count)
+Mesh::Mesh(u32 vertices_count, u32 indices_count)
 {
     vertices = std::vector<Vector3>();
     indices = std::vector<u32>();

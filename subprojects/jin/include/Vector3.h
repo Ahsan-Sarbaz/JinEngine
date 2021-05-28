@@ -32,3 +32,8 @@ Vector3& SubInPlace(Vector3& a, const Vector3& b);
 Vector3& MulInPlace(Vector3& a, const Vector3& b);
 Vector3& DivInPlace(Vector3& a, const Vector3& b);
 b8 NotEquals(const Vector3& a, const Vector3& b);
+Vector3 Cross(const Vector3& a, const Vector3& b);
+float Dot(const Vector3& a, const Vector3& b);
+float Magnitude(const Vector3& a);
+Vector3 Normalize(const Vector3& a);
+float Distance(const Vector3& a, const Vector3& b);

@@ -29,6 +29,8 @@ sources += 'src/Entity.cpp'
 sources += 'src/Maths.cpp'
 sources += 'src/Mesh.cpp'
 sources += 'src/Model.cpp'
+sources += 'src/EditorCamera.cpp'
+sources += 'src/UniformBufferObject.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')

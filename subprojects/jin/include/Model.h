@@ -22,8 +22,8 @@ private:
 
 public:
     Model() = default;
-    void Init();
-    void InitFromFile(const char* path);
+    ~Model();
+    Model(const char* path);
     void AddMesh(Mesh* mesh);
     inline u32 GetMeshCount() { return mesh_count; }
     inline VAO* GetVAO(u32 index) { return vao[index]; }
@@ -33,5 +33,4 @@ public:
 private:
     void ProcessMesh(aiMesh* assimp_mesh, const aiScene* scene);
     void ProcessNode(aiNode* node, const aiScene* scene);
-
 };

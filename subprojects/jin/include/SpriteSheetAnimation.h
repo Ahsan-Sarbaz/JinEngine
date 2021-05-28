@@ -24,7 +24,7 @@ class SpriteSheetAnimation
 
     public:
     SpriteSheetAnimation() = default;
-    void Init(SpriteSheet* sprite_sheet, const SpriteSheetAnimationLayout& layout);
+    SpriteSheetAnimation(SpriteSheet* sprite_sheet, const SpriteSheetAnimationLayout& layout);
     void Update();
 
     inline SpriteSheet* GetSpriteSheet() { return sprite_sheet; }

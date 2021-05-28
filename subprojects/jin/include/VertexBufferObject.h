@@ -46,7 +46,7 @@ private:
 
 public:
     VertexBufferObject() = default;
-    void Init(VertexBufferObjectType type);
+    VertexBufferObject(VertexBufferObjectType type);
     void Bind();
     void Unbind();
     void SetLayout(VertexBufferObjectLayout* layouts, int count);

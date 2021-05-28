@@ -3,7 +3,7 @@
 #include "Logger.h"
 #include <GL/glew.h>
 
-void IndexBufferObject::Init(IndexBufferObjectType _type)
+IndexBufferObject::IndexBufferObject(IndexBufferObjectType _type)
 {
     type = _type;
     glGenBuffers(1, &id);

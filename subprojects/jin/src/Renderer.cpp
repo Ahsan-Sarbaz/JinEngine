@@ -8,29 +8,46 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 
-void Renderer::Init(const RendererConfiguration& _config)
+Renderer::~Renderer()
 {
-    this->config = _config;
+    delete[] batchData->buffer;
+    delete batchData->batchShader;
+    delete batchData->vao;
+    delete batchData->vbo;
+    delete batchData->ibo;
+    delete batchData->textures[0];
+    delete batchData;
+
+    delete rendererData->shader;
+    delete rendererData;
+
+    delete batchStats;
+}
+
+Renderer::Renderer(const RendererConfiguration& _config)
+{
+    config = _config;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);  
 
     if(config.enable_batch_renderering)
     {
         config.batch_renderer_max_vertices = 4 * config.batch_renderer_max_quads;
         config.batch_renderer_max_indices = 6 * config.batch_renderer_max_quads;
         batchData = new BatchRendererData();
-        batchData->buffer = (BatchRendererVertex*)malloc(sizeof(BatchRendererVertex) * config.batch_renderer_max_vertices);
+        batchData->buffer = new BatchRendererVertex[config.batch_renderer_max_vertices];
         batchData->buffer_ptr = batchData->buffer;
 
         batchData->vao = new VertexArrayObject();
-        batchData->vbo = new VertexBufferObject();
-        batchData->ibo = new IndexBufferObject();
+        batchData->vbo = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
+        batchData->ibo = new IndexBufferObject(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
 
         batchData->vao->Init();
-        batchData->vbo->Init(VERTEX_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
-        batchData->ibo->Init(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
 
         VertexBufferObjectLayout layout[5] = {
             {0, 2, VERTEX_BUFFER_OBJECT_LAYOUT_TYPE_FLOAT, 0, sizeof(BatchRendererVertex), (void*)offsetof(BatchRendererVertex, position)},
@@ -63,7 +80,7 @@ void Renderer::Init(const RendererConfiguration& _config)
         batchData->vao->PushVertexBuffer(batchData->vbo);
         batchData->vao->PushIndexBuffer(batchData->ibo);
         
-        batchStats = (BatchRendererStats*)malloc(sizeof(BatchRendererStats));
+        batchStats = new BatchRendererStats();
         batchStats->max_quad_count = config.batch_renderer_max_quads;
         batchStats->max_vertex_count = config.batch_renderer_max_vertices;
         batchStats->max_index_count = config.batch_renderer_max_indices;
@@ -85,9 +102,9 @@ void Renderer::Init(const RendererConfiguration& _config)
         "out float v_tilingFactor;\n"
         "out float v_texture_id;\n"
 
-        "uniform mat4 model;\n"
-        "uniform mat4 view;\n"
-        "uniform mat4 proj;\n"
+        "uniform mat4 u_model;\n"
+        "uniform mat4 u_view;\n"
+        "uniform mat4 u_proj;\n"
 
         "void main()\n"
         "{\n"
@@ -95,7 +112,7 @@ void Renderer::Init(const RendererConfiguration& _config)
             "v_uv = uv;\n"
             "v_texture_id = texture_id;\n"
             "v_tilingFactor = tilingFactor;\n"
-            "gl_Position = proj * view * model * vec4(pos.x, pos.y, 0, 1);\n"
+            "gl_Position = u_proj * u_view * u_model * vec4(pos.x, pos.y, 0, 1);\n"
         "}\n";
 
         char* fragment_buffer_source = 
@@ -171,42 +188,31 @@ void Renderer::Init(const RendererConfiguration& _config)
     rendererData = new ThreeDRendererData();
     char* v_source = "#version 330 core\n"
     "layout(location=0) in vec3 pos;\n"
-    "uniform mat4 u_proj;\n"
-    "uniform mat4 u_view;\n"
-    "uniform mat4 u_model;\n"
+    "layout (std140) uniform Camera\n"
+    "{\n"
+    "   mat4 projection;\n"
+    "   mat4 view;\n"
+    "} cam;\n"
+    // "uniform mat4 u_model;\n"
     "out vec3 v_color;\n"
     "void main() {\n"
     "v_color = pos;"
-    "gl_Position = u_proj * u_view * u_model * vec4(pos, 1);"
+    "   gl_Position = cam.projection * cam.view * vec4(pos, 1);"
     "}\n";
     char* f_source = "#version 330 core\n"
     "out vec4 final_color;\n"
     "in vec3 v_color;\n"
     "void main() {\n"
-    "final_color = vec4(v_color,1);"
+    "   final_color = vec4(v_color,1);"
     "}\n";
 
     rendererData->shader = new ShaderProgram();
     rendererData->shader->InitFromVFShaderSources(v_source, f_source);
+
+    u32 cameraUniformBlockIndex = glGetUniformBlockIndex(rendererData->shader->GetId(), "Camera");
+    glUniformBlockBinding(rendererData->shader->GetId(), cameraUniformBlockIndex, 0);
+
 }
-
-// void DeleteRenderer(Renderer* renderer)
-// {
-//     DeleteTexture(renderer->batchData->textures[0]);
-//     DeleteShaderProgram(renderer->batchData->batchShader);
-//     DeleteVertexArrayobject(renderer->batchData->vao);
-//     DeleteVertexBufferObject(renderer->batchData->vbo);
-//     DeleteIndexBufferObject(renderer->batchData->ibo);
-//     MemFree(renderer->batchData->buffer, sizeof(BatchRendererVertex) * renderer->config.batch_renderer_max_vertices, MEMORY_TAG_BATCH_RENDERER_BUFFER);
-//     MemFree(renderer->batchData, sizeof(BatchRendererData), MEMORY_TAG_STRUCT);
-//     MemFree(renderer->batchStats, sizeof(BatchRendererStats), MEMORY_TAG_STRUCT);
-
-//     MemFree(renderer->rendereData, sizeof(ThreeDRendererData), MEMORY_TAG_STRUCT);
-//     DeleteShaderProgram(renderer->rendereData->shader);
-
-
-//     MemFree(renderer, sizeof(Renderer), MEMORY_TAG_STRUCT);
-// }
 
 void Renderer::AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor)
 {
@@ -329,13 +335,15 @@ void Renderer::DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count)
 void Renderer::DrawCurrentBatch()
 {
     UploadCurrentBatch();
-    m4 model = CreateIdentityMatrix4();
-    m4 view = CreateIdentityMatrix4();
-    m4 proj = CreateOrthographicProjectionMatrix4(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
-    batchData->batchShader->SetUniformMatrix4("model", model);
-    batchData->batchShader->SetUniformMatrix4("view", view);
-    batchData->batchShader->SetUniformMatrix4("proj", proj);
+    m4 model = glm::mat4(1.0f);
+    m4 view = glm::mat4(1.0f);
+    m4 proj = glm::ortho(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
+    // CreateOrthographicProjectionMatrix4(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
+    
     batchData->batchShader->Use();
+    batchData->batchShader->SetUniformMatrix4("u_model", model);
+    batchData->batchShader->SetUniformMatrix4("u_view", view);
+    batchData->batchShader->SetUniformMatrix4("u_proj", proj);
     
     for (u32 i = 0; i < batchData->textures_count; i++)
     {
@@ -355,23 +363,13 @@ void Renderer::ResetRendererStats()
     batchStats->quad_count = 0;
 }
 
-float angle = 0;
 
 void Renderer::DrawModel(Model* model)
 {
     for (u32 i = 0; i < model->GetMeshCount(); i++)
     {
-        angle += 25.0f * GetDeltaTimeMs();
-        auto modelmat = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), {0.0f, 1.0f,0.0f});
-        auto viewmat = glm::lookAt(glm::vec3{0.0f,0.0f,10.0f}, glm::vec3{0.0f,0.0f,0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
-        // m4 modelmat = CreateIdentityMatrix4();
-        m4 projmat = CreatePerspectiveProjectionMatrix4(75.0f, (float)config.app->GetWindow()->GetConfig()->width,
-         (float)config.app->GetWindow()->GetConfig()->height, 0.1f, 1000.0f);
-
-        rendererData->shader->SetUniformMatrix4("u_model", modelmat);
-        rendererData->shader->SetUniformMatrix4("u_view", viewmat);
-        rendererData->shader->SetUniformMatrix4("u_proj", projmat);
         rendererData->shader->Use();
+        // rendererData->shader->SetUniformMatrix4("u_model", modelmat);
         
         DrawVertexArrayObject(model->GetVAO(i), model->GetIBO(i)->GetCount());
     }   

@@ -10,7 +10,7 @@ class Mesh
 
 public:
     Mesh() = default;
-    void Init(u32 vertices_count, u32 indices_count);
+    Mesh(u32 vertices_count, u32 indices_count);
     inline void PushVertex(const Vector3& v) { vertices.push_back(v); }
     inline void PushIndex(u32 i) { indices.push_back(i); }
 

@@ -2,7 +2,7 @@
 #include "Logger.h"
 #include <GL/glew.h>
 
-void VertexBufferObject::Init(VertexBufferObjectType _type)
+VertexBufferObject::VertexBufferObject(VertexBufferObjectType _type)
 {
     type = _type;
     glGenBuffers(1, &id);

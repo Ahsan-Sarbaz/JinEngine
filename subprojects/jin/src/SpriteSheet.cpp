@@ -1,7 +1,7 @@
 #include "SpriteSheet.h"
 #include "Logger.h"
 
-void SpriteSheet::Init(const SpriteSheetConfiguration& _config)
+SpriteSheet::SpriteSheet(const SpriteSheetConfiguration& _config)
 {
     config = _config;
     
@@ -32,9 +32,3 @@ void SpriteSheet::Init(const SpriteSheetConfiguration& _config)
         }
     }
 }
-
-// void DeleteSpriteSheet(SpriteSheet* spriteSheet)
-// {
-//     MemFree(spriteSheet->rects, sizeof(RectF) * spriteSheet->sprites_count, MEMORY_TAG_STRUCT);
-//     MemFree(spriteSheet, sizeof(SpriteSheet), MEMORY_TAG_STRUCT);
-// }

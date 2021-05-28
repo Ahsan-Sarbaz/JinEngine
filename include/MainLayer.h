@@ -1,4 +1,14 @@
 #pragma once
 #include "Jin.h"
 
-Layer* GetMainLayer(Application* app);
+class MainLayer : public Layer
+{
+private:
+    Model* model;
+
+public:
+    MainLayer(Application* app);
+    virtual void OnStart() override;
+    virtual void OnUpdate() override;
+    virtual void OnEnd() override;
+};

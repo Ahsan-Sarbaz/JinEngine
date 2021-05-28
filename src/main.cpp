@@ -17,8 +17,8 @@ int main()
     config.enable_imgui = 1;
 
     
-    Application* app = new Application();
-    app->Init(config);
+    Application* app = new Application(config);
+
     if(app == nullptr)
     {
         LOG_FATAL("Failed to create Application!\n");
@@ -27,12 +27,16 @@ int main()
 
     LOG_INFO("Application creation Successful!\n");
 
-    app->AttachLayer(GetImGUILayer(app));
-    app->AttachLayer(GetMainLayer(app));
+    auto mainLayer = new MainLayer(app);
+    auto imguiLayer = new ImGuiLayer(app);
+    app->AttachLayer(imguiLayer);
+    app->AttachLayer(mainLayer);
 
     app->Run();
 
-    delete app;
 
+    delete mainLayer;
+    delete imguiLayer;
+    delete app;
     return 0;
 }

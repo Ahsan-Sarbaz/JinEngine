@@ -1,6 +1,7 @@
 #include "ShaderProgram.h"
 #include "Logger.h"
 #include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
 
 void ShaderProgram::Init()
 {
@@ -9,8 +10,8 @@ void ShaderProgram::Init()
 
 void ShaderProgram::InitFromVFShaderPath(const char* vpath, const char* fpath)
 {
-    Shader* v_shader = new Shader(); v_shader->Init(SHADER_TYPE_VERTEX);
-    Shader* f_shader = new Shader(); f_shader->Init(SHADER_TYPE_FRAGMENT);
+    Shader* v_shader = new Shader(SHADER_TYPE_VERTEX);
+    Shader* f_shader = new Shader(SHADER_TYPE_FRAGMENT);
     v_shader->SetSourceFromFile(vpath);
     f_shader->SetSourceFromFile(fpath);
 
@@ -26,8 +27,8 @@ void ShaderProgram::InitFromVFShaderPath(const char* vpath, const char* fpath)
 
 void ShaderProgram::InitFromVFShaderSources(char* vsource, char* fsource)
 {
-    Shader* v_shader = new Shader(); v_shader->Init(SHADER_TYPE_VERTEX);
-    Shader* f_shader = new Shader(); f_shader->Init(SHADER_TYPE_FRAGMENT);
+    Shader* v_shader = new Shader(SHADER_TYPE_VERTEX);
+    Shader* f_shader = new Shader(SHADER_TYPE_FRAGMENT);
     v_shader->SetSource(&vsource);
     f_shader->SetSource(&fsource);
     v_shader->Compile();
@@ -146,4 +147,11 @@ void ShaderProgram::SetUniformMatrix4(const char* name, const Matrix4& mat)
 {
     auto location = glGetUniformLocation(id, name);
     glUniformMatrix4fv(location, 1, 0, *mat.data);
+}
+
+ 
+void ShaderProgram::SetUniformMatrix4(const char* name, const glm::mat4& mat)
+{
+    auto location = glGetUniformLocation(id, name);
+    glUniformMatrix4fv(location, 1, 0, glm::value_ptr(mat));
 }

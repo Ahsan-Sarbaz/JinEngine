@@ -2,27 +2,19 @@
 #include "Types.h"
 
 struct Application;
-typedef void (*LayerStartFunc)(Application*);
-typedef void (*LayerUpdateFunc)(Application*);
-typedef void (*LayerEndFunc)(Application*);
-
-struct LayerConfiguration
-{
-    const char* name;
-    LayerStartFunc onStart;
-    LayerUpdateFunc onUpdate;
-    LayerEndFunc onEnd;
-};
 
 class Layer
 {
+protected:
+    Application* app;
 private:
-    LayerConfiguration config;
+    const char* name;
+
 public:
-    Layer() = default;    
-    void  Init(const LayerConfiguration& config);
-    inline LayerConfiguration GetConfig() { return config; }
-    inline void OnStart(Application* app) { config.onStart(app); }
-    inline void OnUpdate(Application* app) { config.onUpdate(app); }
-    inline void OnEnd(Application* app) { config.onEnd(app); }
+    Layer() = default;
+    Layer(const char* name, Application* app);
+    inline const char* GetName() { return name;}
+    virtual void OnStart() = 0;
+    virtual void OnUpdate() = 0;
+    virtual void OnEnd() = 0;
 };

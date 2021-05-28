@@ -72,8 +72,8 @@ class Renderer
 
     public:
     Renderer() = default;
-
-    void Init(const RendererConfiguration& config);
+    ~Renderer();
+    Renderer(const RendererConfiguration& config);
     void DrawQuad(const v2& position, const v2& size, const v4& color);
     void DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
     void DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});

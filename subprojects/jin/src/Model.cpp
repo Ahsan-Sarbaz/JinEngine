@@ -4,16 +4,21 @@
 #include "Logger.h"
 
 
-
-void Model::Init()
+Model::~Model()
 {
-    
+    for (u32 i = 0; i < mesh_count; i++)
+    {
+        delete meshes[i];
+        delete vao[i];
+        delete vbo[i];
+        delete ibo[i];
+    }
 }
+
 
 void Model::ProcessMesh(aiMesh* assimp_mesh, const aiScene* scene)
 {
-    auto m = new Mesh();
-    m->Init(assimp_mesh->mNumVertices, assimp_mesh->mNumFaces * 3);
+    auto m = new Mesh(assimp_mesh->mNumVertices, assimp_mesh->mNumFaces * 3);
     
     for (u32 i = 0; i < assimp_mesh->mNumVertices; ++i)
     {
@@ -44,7 +49,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
     }
 }
 
-void Model::InitFromFile(const char* path)
+Model::Model(const char* path)
 {
     Assimp::Importer importer;
     char* buffer;
@@ -61,12 +66,9 @@ void Model::InitFromFile(const char* path)
     for (u32 i = 0; i < mesh_count; i++)
     {
         vao[i] = new VertexArrayObject();
-        vbo[i] = new VertexBufferObject();
-        ibo[i] = new IndexBufferObject();    
-
+        vbo[i] = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
+        ibo[i] = new IndexBufferObject(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);    
         vao[i]->Init();
-        vbo[i]->Init(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
-        ibo[i]->Init(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
 
         vbo[i]->SetData(sizeof(vec3) * meshes[i]->GetVerticesCount(), meshes[i]->GetVerticesData());
         ibo[i]->SetData(sizeof(u32) * meshes[i]->GetIndicesCount(), meshes[i]->GetIndicesData());

@@ -32,3 +32,7 @@ Vector4& SubInPlace(Vector4& a, const Vector4& b);
 Vector4& MulInPlace(Vector4& a, const Vector4& b);
 Vector4& DivInPlace(Vector4& a, const Vector4& b);
 b8 NotEquals(const Vector4& a, const Vector4& b);
+float Dot(const Vector4& a, const Vector4& b);
+float Magnitude(const Vector4& a);
+Vector4 Normalize(const Vector4& a);
+float Distance(const Vector4& a, const Vector4& b);

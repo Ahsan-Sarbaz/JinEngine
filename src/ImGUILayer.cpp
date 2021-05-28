@@ -1,30 +1,23 @@
 #include "ImGUILayer.h"
 #include "Jin.h"
-#include "imgui.h"
 
-
-void ImGUILayerStart(Application* app)
+ImGuiLayer::ImGuiLayer(Application* app)
+    :Layer("ImGuiLayer", app)
 {
 
 }
 
-void ImGUILayerUpdate(Application* app)
+void ImGuiLayer::OnStart()
+{  
+
+}
+
+void ImGuiLayer::OnUpdate()
 {   
+
 }
 
-void ImGUILayerEnd(Application* app)
+void ImGuiLayer::OnEnd() 
 {
-}
 
-Layer* GetImGUILayer(Application* app)
-{
-    LayerConfiguration config;
-    config.name = "ImGUI Layer";
-    config.onStart = ImGUILayerStart;
-    config.onUpdate = ImGUILayerUpdate;
-    config.onEnd = ImGUILayerEnd;
-
-    auto layer = new Layer();
-    layer->Init(config);
-    return layer;
 }

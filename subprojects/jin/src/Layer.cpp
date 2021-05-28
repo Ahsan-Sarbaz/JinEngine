@@ -1,6 +1,8 @@
 #include "Layer.h"
+#include "Application.h"
 
-void Layer::Init(const LayerConfiguration& _config)
+Layer::Layer(const char* _name, Application* _app)
+    :name(_name), app(_app)
 {
-    config = _config;
+
 }

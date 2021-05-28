@@ -2,7 +2,7 @@
 #include "Logger.h"
 #include "Time.h"
 
-void SpriteSheetAnimation::Init(SpriteSheet* _sprite_sheet, const SpriteSheetAnimationLayout& _layout)
+SpriteSheetAnimation::SpriteSheetAnimation(SpriteSheet* _sprite_sheet, const SpriteSheetAnimationLayout& _layout)
 {
     sprite_sheet = sprite_sheet;
 

@@ -17,7 +17,7 @@ class Shader
     
     public:
     Shader() = default;
-    void Init(ShaderType type);
+    Shader(ShaderType type);
     void SetSource(char** buffer);
     b8 Compile();
     b8 SetSourceFromFile(const char* path);

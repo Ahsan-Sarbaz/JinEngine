@@ -1,38 +1,23 @@
 #include "MainLayer.h"
 #include "Jin.h"
-#include <glm/gtc/matrix_transform.hpp>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+MainLayer::MainLayer(Application* app)
+    :Layer("MainLayer", app)
+{
 
-Model* model;
-
-void MainLayerStart(Application* app)
-{  
-    model = new Model();
-    model->InitFromFile("res/models/Car.dae");
 }
 
-void MainLayerUpdate(Application* app)
+void MainLayer::OnStart()
+{  
+    model = new Model("res/models/bunny.fbx");
+}
+
+void MainLayer::OnUpdate()
 {   
     app->GetRenderer()->DrawModel(model);
 }
 
-void MainLayerEnd(Application* app)
+void MainLayer::OnEnd() 
 {
     delete model;
-}
-
-Layer* GetMainLayer(Application* app)
-{
-    LayerConfiguration config;
-    config.name = "Main Layer";
-    config.onStart = MainLayerStart;
-    config.onUpdate = MainLayerUpdate;
-    config.onEnd = MainLayerEnd;
-
-    auto layer = new Layer();
-    layer->Init(config);
-    return layer;
 }

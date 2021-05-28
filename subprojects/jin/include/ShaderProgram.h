@@ -33,5 +33,8 @@ public:
     void SetUniformVector3(const char* name, const Vector3& vec);
     void SetUniformVector4(const char* name, const Vector4& vec);
     void SetUniformMatrix4(const char* name, const Matrix4& mat);    
+    void SetUniformMatrix4(const char* name, const glm::mat4& mat);
+
+    inline u32 GetId() { return id; }  
 };
 

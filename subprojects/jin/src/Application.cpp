@@ -6,9 +6,11 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Maths.h"
+#include "KeyCodes.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
 
 // TODO: NOTE: this is to be controlled at build time
 #define ENABLE_IMGUI 1
@@ -16,6 +18,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+Application* Application::s_app;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -88,10 +92,10 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
     app->AddEvent(e);
 }
 
-void  Application::Init(const ApplicationConfiguration& _config)
+Application::Application(const ApplicationConfiguration& _config)
 {
-    this->config = _config;
-
+    s_app = this;
+    config = _config;
     auto time = GetTimeInternal();
     *time = new Time;
     (*time)->time_scale = 1;
@@ -161,13 +165,44 @@ void  Application::Init(const ApplicationConfiguration& _config)
     rendererConfig.renderer_resolution_y = config.windowConfig.height;
     rendererConfig.enable_batch_renderering = TRUE;
     rendererConfig.batch_renderer_max_quads = 100;
-    renderer = new Renderer();
-    renderer->Init(rendererConfig);
+    renderer = new Renderer(rendererConfig);
+
+    editorCam = new EditorCamera();
+    editorCam->SetEye(glm::vec3{0.f,0.f,1000.f});
+    EventListener editorCameraEventListener = {};
+    editorCameraEventListener.type = EVENT_TYPE_KEYBOARD_KEY_DOWN;
+    editorCameraEventListener.callback = [](Event e){
+        switch(e.data.key_char)
+        {
+            case JIN_KEY_W:
+            case JIN_KEY_UP:
+                Application::GetApp()->GetEditorCamera()->Move({0,0,5 * GetDeltaTime()});
+            break;
+            case JIN_KEY_S:
+            case JIN_KEY_DOWN:
+                Application::GetApp()->GetEditorCamera()->Move({0,0,-5 * GetDeltaTime()});
+            break;
+            case JIN_KEY_A:
+            case JIN_KEY_LEFT:
+                Application::GetApp()->GetEditorCamera()->Move({5* GetDeltaTime(),0,0});
+            break;
+            case JIN_KEY_D:
+            case JIN_KEY_RIGHT:
+                Application::GetApp()->GetEditorCamera()->Move({-5 * GetDeltaTime(),0,0});
+            break;
+        }
+    };
+    AddEventListener(editorCameraEventListener);
+
+    cameraUBO = new UniformBufferObject(UNIFORM_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
+    cameraUBO->SetBindingIndex(0);
+    cameraUBO->SetData(sizeof(glm::mat4) * 2, nullptr);
 }
 
 Application::~Application()
 {
 
+    delete editorCam;
     delete renderer;
     glfwDestroyWindow(window->GetHandle());
     delete window;
@@ -178,9 +213,9 @@ void  Application::Run()
 {
     glClearColor(0, 0, 0, 1);
 
-    for(u32 i = layersCount; i > 0; --i)
+    for (int i = layers.size() - 1; i >= 0; i--)
     {
-        layers[i - 1]->OnStart(this);
+        layers[i]->OnStart();
     }
 
     double current_time = glfwGetTime();
@@ -231,10 +266,18 @@ void  Application::Run()
             ImGui::NewFrame();
         }
 
+        editorCam->Update();
 
-        for(u32 i = layersCount; i > 0; --i)
+        glm::mat4 cameraUBOData[2] = {
+            editorCam->GetProjection(), editorCam->GetView()
+        };
+        
+        cameraUBO->SetSubData(0, sizeof(cameraUBOData), cameraUBOData);
+        
+        
+        for (int i = layers.size() - 1; i >= 0; i--)
         {
-            layers[i - 1]->OnUpdate(this);
+            layers[i]->OnUpdate();
         }
 
         renderer->StartNewBatch();
@@ -255,16 +298,21 @@ void  Application::Run()
             anim.spriteSheetAnimation->GetSpriteSheet()->GetRect(anim.spriteSheetAnimation->GetLayout().current_frame));
             anim.spriteSheetAnimation->Update();
         }
+
         renderer->DrawCurrentBatch();
 
         if(config.enable_imgui)
         {
             if(ImGui::Begin("Debug"))
             {
+
+                ImGui::InputFloat3("Camera Position", (float*)editorCam->GetPosition());
+                ImGui::InputFloat3("Camera Rotation", (float*)editorCam->GetRotation());
+
                 ImGui::Text("Attached Layers");
-                for(u32 i = layersCount; i > 0; --i)
+                for (int i = layers.size() - 1; i >= 0; i--)
                 {
-                    ImGui::Text("Layer: %s", layers[i - 1]->GetConfig().name);
+                    ImGui::Text("Layer: %s", layers[i]->GetName());
                 }
 
                 if(ImGui::TreeNode("Batch Renderer Stats"))
@@ -320,10 +368,16 @@ void  Application::Run()
         glfwSwapBuffers(window->GetHandle());
     }
 
-    for(u32 i = layersCount; i > 0; --i)
+    for (int i = layers.size() - 1; i >= 0; i--)
     {
-        layers[i - 1]->OnEnd(this);
+        layers[i]->OnEnd();
     }
+    
+
+    // for(u32 i = layersCount; i > 0; --i)
+    // {
+    //     layers[i - 1]->OnEnd();
+    // }
 
     if(config.enable_imgui)
     {
@@ -340,8 +394,7 @@ void Application::AttachLayer(Layer* layer)
         LOG_ERROR("You are trying to attach a null Layer!\n");
         return;
     }
-    layers[layersCount] = layer;
-    layersCount++;
+    layers.push_back(layer);
 }
 
 void Application::AddEvent(Event e)

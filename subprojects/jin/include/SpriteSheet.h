@@ -23,7 +23,7 @@ class SpriteSheet
 
     public:
     SpriteSheet() = default;
-    void Init(const SpriteSheetConfiguration& config);
+    SpriteSheet(const SpriteSheetConfiguration& config);
 
     inline SpriteSheetConfiguration GetConfig() { return config; }
     inline u32 GetSpritePerColumnCount() { return sprites_per_column; }

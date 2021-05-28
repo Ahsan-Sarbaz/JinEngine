@@ -1,4 +1,13 @@
 #pragma once
 #include "Layer.h"
 
-Layer* GetImGUILayer(Application* app);
+class ImGuiLayer: public Layer
+{
+private:
+
+public:
+    ImGuiLayer(Application* app);
+    virtual void OnStart() override;
+    virtual void OnUpdate() override;
+    virtual void OnEnd() override;
+};

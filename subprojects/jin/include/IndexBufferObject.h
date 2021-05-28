@@ -23,7 +23,7 @@ private:
     u32 indicesCount;
 public:
     IndexBufferObject() = default;
-    void Init(IndexBufferObjectType type);
+    IndexBufferObject(IndexBufferObjectType type);
     void Bind();
     void Unbind();
     void SetData(u32 size, void* data);

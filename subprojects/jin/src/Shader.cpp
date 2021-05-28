@@ -4,21 +4,10 @@
 #include <GL/glew.h>
 #include <stdlib.h>
 
-void Shader::Init(ShaderType type)
+Shader::Shader(ShaderType type)
 {
     id = glCreateShader(type);
 }
-
-// void DeleteShader(Shader* shader)
-// {
-//     if(shader == nullptr)
-//     {
-//         LOG_ERROR("Trying to delete a null shader\n");
-//         return;
-//     }
-//     glDeleteShader(shader->id);
-//     MemFree(shader, sizeof(shader), MEMORY_TAG_STRUCT);
-// }
 
 void Shader::SetSource(char** buffer)
 {
@@ -47,12 +36,16 @@ const char* Shader::TypeToString(ShaderType type)
 {
     switch(type)
     {
-        case SHADER_TYPE_VERTEX: return "VERTEX SHADER"; break;
-        case SHADER_TYPE_FRAGMENT: return "FRAGMENT SHADER"; break;
-        case SHADER_TYPE_GEOMETRY: return "GEOMETRY SHADER"; break;
+        case SHADER_TYPE_VERTEX:
+            return "VERTEX SHADER"; 
+        break;
+        case SHADER_TYPE_FRAGMENT: 
+            return "FRAGMENT SHADER"; 
+        break;
+        case SHADER_TYPE_GEOMETRY: 
+            return "GEOMETRY SHADER"; 
+        break;
     }
-
-    return "UNKNOWN SHADER TYPE";
 }
 
 b8 Shader::SetSourceFromFile(const char* path)

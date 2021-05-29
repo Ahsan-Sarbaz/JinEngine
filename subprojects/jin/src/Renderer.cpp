@@ -73,85 +73,89 @@ Renderer::Renderer(const RendererConfiguration& _config)
         batchData->textures[0] = new Texture();
         batchData->textures[0]->InitFromBuffer(whiteData, 1,1,4);
 
-        char* vertex_buffer_source = 
-        "#version 330 core\n"
-        "layout(location = 0) in vec2 pos;\n"
-        "layout(location = 1) in vec4 color;\n"
-        "layout(location = 2) in vec2 uv;\n"
-        "layout(location = 3) in float texture_id;\n"
-        "layout(location = 4) in float tilingFactor;\n"
+        char* vertex_buffer_source = R"(
+        #version 330 core
+        
+        layout(location = 0) in vec2 pos;
+        layout(location = 1) in vec4 color;
+        layout(location = 2) in vec2 uv;
+        layout(location = 3) in float texture_id;
+        layout(location = 4) in float tilingFactor;
 
-        "out vec4 v_color;\n"
-        "out vec2 v_uv;\n"
-        "out float v_tilingFactor;\n"
-        "out float v_texture_id;\n"
+        out vec4 v_color;
+        out vec2 v_uv;
+        out float v_tilingFactor;
+        out float v_texture_id;
 
-        "uniform mat4 u_model;\n"
-        "uniform mat4 u_view;\n"
-        "uniform mat4 u_proj;\n"
+        uniform mat4 u_model;
+        uniform mat4 u_view;
+        uniform mat4 u_proj;
 
-        "void main()\n"
-        "{\n"
-            "v_color = color;\n"
-            "v_uv = uv;\n"
-            "v_texture_id = texture_id;\n"
-            "v_tilingFactor = tilingFactor;\n"
-            "gl_Position = u_proj * u_view * u_model * vec4(pos.x, pos.y, 0, 1);\n"
-        "}\n";
+        void main()
+        {
+            v_color = color;
+            v_uv = uv;
+            v_texture_id = texture_id;
+            v_tilingFactor = tilingFactor;
+            gl_Position = u_proj * u_view * u_model * vec4(pos.x, pos.y, 0, 1);
+        }
+        )";
 
-        char* fragment_buffer_source = 
-        "#version 330 core\n"
-        "out vec4 final_color;\n"
-        "in vec4 v_color;\n"
-        "in vec2 v_uv;\n"
-        "in float v_tilingFactor;\n"
-        "in float v_texture_id;\n"
-        "uniform sampler2D u_textures[16];\n"
-        "void main()\n"
-        "{\n"
+        char* fragment_buffer_source = R"(
+        #version 330 core
 
-            "vec4 color = v_color;\n"
-
-            "switch(int(v_texture_id))\n"
-            "{\n"
-                "case 0: color *= texture(u_textures[0], v_uv * v_tilingFactor); break;\n"
-                "case 1: color *= texture(u_textures[1], v_uv * v_tilingFactor); break;\n"
-                "case 2: color *= texture(u_textures[2], v_uv * v_tilingFactor); break;\n"
-                "case 3: color *= texture(u_textures[3], v_uv * v_tilingFactor); break;\n"
-                "case 4: color *= texture(u_textures[4], v_uv * v_tilingFactor); break;\n"
-                "case 5: color *= texture(u_textures[5], v_uv * v_tilingFactor); break;\n"
-                "case 6: color *= texture(u_textures[6], v_uv * v_tilingFactor); break;\n"
-                "case 7: color *= texture(u_textures[7], v_uv * v_tilingFactor); break;\n"
-                "case 8: color *= texture(u_textures[8], v_uv * v_tilingFactor); break;\n"
-                "case 9: color *= texture(u_textures[9], v_uv * v_tilingFactor); break;\n"
-                "case 10: color *= texture(u_textures[10], v_uv * v_tilingFactor); break;\n"
-                "case 11: color *= texture(u_textures[11], v_uv * v_tilingFactor); break;\n"
-                "case 12: color *= texture(u_textures[12], v_uv * v_tilingFactor); break;\n"
-                "case 13: color *= texture(u_textures[13], v_uv * v_tilingFactor); break;\n"
-                "case 14: color *= texture(u_textures[14], v_uv * v_tilingFactor); break;\n"
-                "case 15: color *= texture(u_textures[15], v_uv * v_tilingFactor); break;\n"
-                "#if 0\n"
-                "case 16: color *= texture(u_textures[16], v_uv * v_tilingFactor); break;\n"
-                "case 17: color *= texture(u_textures[17], v_uv * v_tilingFactor); break;\n"
-                "case 18: color *= texture(u_textures[18], v_uv * v_tilingFactor); break;\n"
-                "case 19: color *= texture(u_textures[19], v_uv * v_tilingFactor); break;\n"
-                "case 20: color *= texture(u_textures[20], v_uv * v_tilingFactor); break;\n"
-                "case 21: color *= texture(u_textures[21], v_uv * v_tilingFactor); break;\n"
-                "case 22: color *= texture(u_textures[22], v_uv * v_tilingFactor); break;\n"
-                "case 23: color *= texture(u_textures[23], v_uv * v_tilingFactor); break;\n"
-                "case 24: color *= texture(u_textures[24], v_uv * v_tilingFactor); break;\n"
-                "case 25: color *= texture(u_textures[25], v_uv * v_tilingFactor); break;\n"
-                "case 26: color *= texture(u_textures[26], v_uv * v_tilingFactor); break;\n"
-                "case 27: color *= texture(u_textures[27], v_uv * v_tilingFactor); break;\n"
-                "case 28: color *= texture(u_textures[28], v_uv * v_tilingFactor); break;\n"
-                "case 29: color *= texture(u_textures[29], v_uv * v_tilingFactor); break;\n"
-                "case 30: color *= texture(u_textures[30], v_uv * v_tilingFactor); break;\n"
-                "case 31: color *= texture(u_textures[31], v_uv * v_tilingFactor); break;\n"
-                "#endif\n"
-            "}\n"
-
-            "final_color = color;\n"
-        "}\n";
+        out vec4 final_color;
+        
+        in vec4 v_color;
+        in vec2 v_uv;
+        in float v_tilingFactor;
+        in float v_texture_id;
+        
+        uniform sampler2D u_textures[16];
+        
+        void main()
+        {
+            vec4 color = v_color;
+            switch(int(v_texture_id))
+            {
+                case 0: color *= texture(u_textures[0], v_uv * v_tilingFactor); break;
+                case 1: color *= texture(u_textures[1], v_uv * v_tilingFactor); break;
+                case 2: color *= texture(u_textures[2], v_uv * v_tilingFactor); break;
+                case 3: color *= texture(u_textures[3], v_uv * v_tilingFactor); break;
+                case 4: color *= texture(u_textures[4], v_uv * v_tilingFactor); break;
+                case 5: color *= texture(u_textures[5], v_uv * v_tilingFactor); break;
+                case 6: color *= texture(u_textures[6], v_uv * v_tilingFactor); break;
+                case 7: color *= texture(u_textures[7], v_uv * v_tilingFactor); break;
+                case 8: color *= texture(u_textures[8], v_uv * v_tilingFactor); break;
+                case 9: color *= texture(u_textures[9], v_uv * v_tilingFactor); break;
+                case 10: color *= texture(u_textures[10], v_uv * v_tilingFactor); break;
+                case 11: color *= texture(u_textures[11], v_uv * v_tilingFactor); break;
+                case 12: color *= texture(u_textures[12], v_uv * v_tilingFactor); break;
+                case 13: color *= texture(u_textures[13], v_uv * v_tilingFactor); break;
+                case 14: color *= texture(u_textures[14], v_uv * v_tilingFactor); break;
+                case 15: color *= texture(u_textures[15], v_uv * v_tilingFactor); break;
+                #if 0
+                case 16: color *= texture(u_textures[16], v_uv * v_tilingFactor); break;
+                case 17: color *= texture(u_textures[17], v_uv * v_tilingFactor); break;
+                case 18: color *= texture(u_textures[18], v_uv * v_tilingFactor); break;
+                case 19: color *= texture(u_textures[19], v_uv * v_tilingFactor); break;
+                case 20: color *= texture(u_textures[20], v_uv * v_tilingFactor); break;
+                case 21: color *= texture(u_textures[21], v_uv * v_tilingFactor); break;
+                case 22: color *= texture(u_textures[22], v_uv * v_tilingFactor); break;
+                case 23: color *= texture(u_textures[23], v_uv * v_tilingFactor); break;
+                case 24: color *= texture(u_textures[24], v_uv * v_tilingFactor); break;
+                case 25: color *= texture(u_textures[25], v_uv * v_tilingFactor); break;
+                case 26: color *= texture(u_textures[26], v_uv * v_tilingFactor); break;
+                case 27: color *= texture(u_textures[27], v_uv * v_tilingFactor); break;
+                case 28: color *= texture(u_textures[28], v_uv * v_tilingFactor); break;
+                case 29: color *= texture(u_textures[29], v_uv * v_tilingFactor); break;
+                case 30: color *= texture(u_textures[30], v_uv * v_tilingFactor); break;
+                case 31: color *= texture(u_textures[31], v_uv * v_tilingFactor); break;
+                #endif
+            }
+            final_color = color;
+        }
+        )";
 
         batchData->batchShader = new ShaderProgram();
         batchData->batchShader->InitFromVFShaderSources(vertex_buffer_source, fragment_buffer_source);

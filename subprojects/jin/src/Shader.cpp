@@ -4,7 +4,8 @@
 #include <GL/glew.h>
 #include <stdlib.h>
 
-Shader::Shader(ShaderType type)
+Shader::Shader(ShaderType _type)
+    :type(_type)
 {
     id = glCreateShader(type);
 }

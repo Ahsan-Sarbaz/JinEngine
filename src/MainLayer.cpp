@@ -31,4 +31,5 @@ void MainLayer::OnUpdate()
 void MainLayer::OnEnd() 
 {
     delete model;
+    delete skyMap;
 }

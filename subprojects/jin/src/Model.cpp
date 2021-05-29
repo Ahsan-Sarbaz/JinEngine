@@ -6,7 +6,7 @@
 
 Model::~Model()
 {
-    for (u32 i = 0; i < mesh_count; i++)
+    for (u32 i = 0; i < meshes.size(); i++)
     {
         delete meshes[i];
         delete vao[i];
@@ -59,11 +59,11 @@ Model::Model(const char* path)
     FreeFileBuffer(&buffer, size);
 
     ProcessNode(scene->mRootNode, scene);
-    vao.reserve(mesh_count);
-    vbo.reserve(mesh_count);
-    ibo.reserve(mesh_count);
+    vao.reserve(meshes.size());
+    vbo.reserve(meshes.size());
+    ibo.reserve(meshes.size());
 
-    for (u32 i = 0; i < mesh_count; i++)
+    for (u32 i = 0; i < meshes.size(); i++)
     {
         vao[i] = new VertexArrayObject();
         vbo[i] = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
@@ -89,5 +89,4 @@ Model::Model(const char* path)
 void Model::AddMesh(Mesh* mesh)
 {
     meshes.push_back(mesh);
-    mesh_count++;
 }

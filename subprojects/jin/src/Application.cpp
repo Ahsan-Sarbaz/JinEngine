@@ -223,7 +223,7 @@ Application::Application(const ApplicationConfiguration& _config)
 
 Application::~Application()
 {
-
+    delete cameraUBO;
     delete editorCam;
     delete renderer;
     glfwDestroyWindow(window->GetHandle());
@@ -293,7 +293,6 @@ void  Application::Run()
         };
         
         cameraUBO->SetSubData(0, sizeof(cameraUBOData), cameraUBOData);
-        
         
         for (int i = layers.size() - 1; i >= 0; i--)
         {

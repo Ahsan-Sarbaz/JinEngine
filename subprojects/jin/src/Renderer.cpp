@@ -7,23 +7,6 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-
-Renderer::~Renderer()
-{
-    delete[] batchData->buffer;
-    delete batchData->batchShader;
-    delete batchData->vao;
-    delete batchData->vbo;
-    delete batchData->ibo;
-    delete batchData->textures[0];
-    delete batchData;
-
-    delete rendererData->shader;
-    delete rendererData;
-
-    delete batchStats;
-}
-
 Renderer::Renderer(const RendererConfiguration& _config)
 {
     config = _config;
@@ -31,6 +14,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);  
@@ -180,39 +164,185 @@ Renderer::Renderer(const RendererConfiguration& _config)
             samplers[i] = i;
         }
         
-        batchData->batchShader->Use();
+        batchData->batchShader->Bind();
         batchData->batchShader->SetUnifromIntArray("u_textures", samplers, batchData->max_textures_count);
+        batchData->batchShader->Unbind();
         free(samplers);   
     }
 
     rendererData = new ThreeDRendererData();
-    char* v_source = "#version 330 core\n"
-    "layout(location=0) in vec3 pos;\n"
-    "layout (std140) uniform Camera\n"
-    "{\n"
-    "   mat4 projection;\n"
-    "   mat4 view;\n"
-    "} cam;\n"
-    // "uniform mat4 u_model;\n"
-    "out vec3 v_color;\n"
-    "void main() {\n"
-    "v_color = pos;"
-    "   gl_Position = cam.projection * cam.view * vec4(pos, 1);"
-    "}\n";
-    char* f_source = "#version 330 core\n"
-    "out vec4 final_color;\n"
-    "in vec3 v_color;\n"
-    "void main() {\n"
-    "   final_color = vec4(v_color,1);"
-    "}\n";
+    char* v_source = R"(
+    #version 330 core
+    layout(location=0) in vec3 pos;
+    layout (std140) uniform Camera
+    {
+       mat4 projection;
+       mat4 view;
+    } cam;
+    // "uniform mat4 u_model;
+    out vec3 v_color;
+    void main() 
+    {
+        v_color = pos;
+        gl_Position = cam.projection * cam.view * vec4(pos, 1);
+    })";
+    char* f_source = R"(
+    #version 330 core
+    out vec4 final_color;
+    in vec3 v_color;
+    void main() 
+    {
+       final_color = vec4(v_color, 1);
+    })";
 
     rendererData->shader = new ShaderProgram();
     rendererData->shader->InitFromVFShaderSources(v_source, f_source);
 
+    char* skybox_v_source = R"(
+    #version 330 core
+    layout(location=0) in vec3 a_Pos;
+    
+    layout (std140) uniform Camera
+    {
+       mat4 projection;
+       mat4 view;
+    } cam;
+    out vec3 v_textureDir;
+
+    void main() 
+    {
+        vec4 pos = cam.projection * cam.view * vec4(vec3(a_Pos.x * 100000000000.0, a_Pos.y * 100000000000.0, a_Pos.z * 100000000000.0), 1);
+        gl_Position= pos.xyww;
+        v_textureDir = a_Pos;
+    })";
+    char* skybox_f_source = R"(
+    #version 330 core
+    out vec4 final_color;
+
+    in vec3 v_textureDir;
+    uniform samplerCube skyBox;
+
+    void main()
+    {
+       final_color = texture(skyBox,v_textureDir);
+    })";
+
+    rendererData->skyboxShader = new ShaderProgram();
+    rendererData->skyboxShader->InitFromVFShaderSources(skybox_v_source, skybox_f_source);
+
+
     u32 cameraUniformBlockIndex = glGetUniformBlockIndex(rendererData->shader->GetId(), "Camera");
     glUniformBlockBinding(rendererData->shader->GetId(), cameraUniformBlockIndex, 0);
 
+    float cubeVerts[] = {
+        // top (+z)
+        -1, -1,  1,
+         1, -1,  1,
+        -1,  1,  1,
+        -1,  1,  1,
+         1, -1,  1,
+         1,  1,  1, 
+
+        // bottom (-z)
+        -1, -1, -1,
+        -1,  1, -1,
+         1, -1, -1,
+         1, -1, -1,
+        -1,  1, -1,
+         1,  1, -1,
+
+        // right (+x)
+         1, -1, -1, 
+         1,  1, -1, 
+         1, -1,  1, 
+         1, -1,  1, 
+         1,  1, -1, 
+         1,  1,  1, 
+
+        // left (-x)
+        -1, -1, -1, 
+        -1, -1,  1, 
+        -1,  1, -1, 
+        -1,  1, -1, 
+        -1, -1,  1, 
+        -1,  1,  1, 
+
+        // front (+y)
+        -1, -1, -1,
+         1, -1, -1,
+        -1, -1,  1,
+        -1, -1,  1,
+         1, -1, -1,
+         1, -1,  1,
+
+        // back (-y)
+        -1,  1, -1,
+        -1,  1,  1,
+         1,  1, -1,
+         1,  1, -1,
+        -1,  1,  1,
+         1,  1,  1,
+    };
+
+    rendererData->cubeVao = new VertexArrayObject();
+    rendererData->cubeVao->Init();    
+    rendererData->cubeVbo = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
+    VertexBufferObjectLayout cubeVBOLayout[1] = {
+        {0, 3, VERTEX_BUFFER_OBJECT_LAYOUT_TYPE_FLOAT, 0, sizeof(float) * 3, (void*)0},
+        // {1, 4, VERTEX_BUFFER_OBJECT_LAYOUT_TYPE_FLOAT, 0, sizeof(BatchRendererVertex), (void*)offsetof(BatchRendererVertex, color)},
+        // {2, 2, VERTEX_BUFFER_OBJECT_LAYOUT_TYPE_FLOAT, 0, sizeof(BatchRendererVertex), (void*)offsetof(BatchRendererVertex, uv)},
+    };
+    rendererData->cubeVbo->SetLayout(cubeVBOLayout, sizeof(cubeVBOLayout) / sizeof(VertexBufferObjectLayout));
+    rendererData->cubeVbo->SetData(sizeof(cubeVerts), cubeVerts);
+    rendererData->cubeVao->PushVertexBuffer(rendererData->cubeVbo);
+    rendererData->cubeIbo = new IBO(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
+    u32 cubeIndices[] = {
+        0, 1, 2, 
+        3, 4, 5,
+
+        6, 7, 8,
+        9,10,11,
+
+        12,13,14,
+        15,16,17,
+
+        18,19,20,
+        21,22,23,
+
+        24,25,26,
+        27,28,29,
+
+        30,31,32,
+        33,34,35
+    };
+    rendererData->cubeIbo->SetData(sizeof(cubeIndices), cubeIndices);
+    rendererData->cubeIbo->SetCount(sizeof(cubeIndices) / sizeof(u32));
+    rendererData->cubeVao->PushIndexBuffer(rendererData->cubeIbo);
+}   
+
+Renderer::~Renderer()
+{
+
+    delete[] batchData->buffer;
+    delete batchData->batchShader;
+    delete batchData->vao;
+    delete batchData->vbo;
+    delete batchData->ibo;
+    delete batchData->textures[0];
+    delete batchData;
+
+    delete rendererData->shader;
+    delete rendererData->skyboxShader;
+
+    delete rendererData->cubeVao;
+    delete rendererData->cubeVbo;
+    delete rendererData->cubeIbo;
+
+    delete rendererData;
+
+    delete batchStats;
 }
+
 
 void Renderer::AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor)
 {
@@ -328,8 +458,14 @@ void Renderer::UploadCurrentBatch()
 
 void Renderer::DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count)
 {
+    if(rendererData->userShader != nullptr)
+    {
+        rendererData->userShader->Bind();
+        rendererData->userShader = nullptr;
+    }
     vao->Bind();
     glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0);
+    vao->Unbind();
 }
 
 void Renderer::DrawCurrentBatch()
@@ -338,9 +474,8 @@ void Renderer::DrawCurrentBatch()
     m4 model = glm::mat4(1.0f);
     m4 view = glm::mat4(1.0f);
     m4 proj = glm::ortho(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
-    // CreateOrthographicProjectionMatrix4(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
-    
-    batchData->batchShader->Use();
+
+    batchData->batchShader->Bind();
     batchData->batchShader->SetUniformMatrix4("u_model", model);
     batchData->batchShader->SetUniformMatrix4("u_view", view);
     batchData->batchShader->SetUniformMatrix4("u_proj", proj);
@@ -351,6 +486,7 @@ void Renderer::DrawCurrentBatch()
     }
 
     DrawVertexArrayObject(batchData->vao, batchData->indexCount);
+    batchData->batchShader->Unbind();
     batchData->indexCount = 0;
     batchStats->draw_count++;
 }
@@ -368,9 +504,32 @@ void Renderer::DrawModel(Model* model)
 {
     for (u32 i = 0; i < model->GetMeshCount(); i++)
     {
-        rendererData->shader->Use();
-        // rendererData->shader->SetUniformMatrix4("u_model", modelmat);
-        
+        rendererData->shader->Bind();
+        // rendererData->shader->SetUniformMatrix4("u_model", modelmat);        
         DrawVertexArrayObject(model->GetVAO(i), model->GetIBO(i)->GetCount());
+        rendererData->shader->Unbind();
     }   
+}
+
+void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
+{
+    rendererData->shader->Bind();
+    DrawVertexArrayObject(rendererData->cubeVao, rendererData->cubeIbo->GetCount());
+    rendererData->shader->Unbind();
+}
+
+void Renderer::DrawSkybox(CubeMap* map)
+{
+    glCullFace(GL_FRONT);
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
+    rendererData->skyboxShader->Bind();
+    map->Bind();
+    SetShader(rendererData->skyboxShader);
+    DrawCube({}, {}, {});
+    map->Unbind();
+    rendererData->skyboxShader->Unbind();
+    glCullFace(GL_BACK);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
 }

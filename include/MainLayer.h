@@ -5,7 +5,7 @@ class MainLayer : public Layer
 {
 private:
     Model* model;
-
+    CubeMap* skyMap;
 public:
     MainLayer(Application* app);
     virtual void OnStart() override;

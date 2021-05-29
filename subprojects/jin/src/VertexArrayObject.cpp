@@ -19,12 +19,14 @@ void VertexArrayObject::PushVertexBuffer(VertexBufferObject* vbo)
         glVertexAttribPointer(layout.index, layout.size, layout.type, layout.normalized, layout.stride, layout.pointer);
         glEnableVertexAttribArray(layout.index);
     }
+    Unbind();
 }
 
 void VertexArrayObject::PushIndexBuffer(IndexBufferObject* ibo)
 {
     Bind();
     ibo->Bind();
+    Unbind();
 }
 
 void VertexArrayObject::Bind()

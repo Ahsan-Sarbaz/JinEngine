@@ -168,31 +168,53 @@ Application::Application(const ApplicationConfiguration& _config)
     renderer = new Renderer(rendererConfig);
 
     editorCam = new EditorCamera();
-    editorCam->SetEye(glm::vec3{0.f,0.f,1000.f});
-    EventListener editorCameraEventListener = {};
-    editorCameraEventListener.type = EVENT_TYPE_KEYBOARD_KEY_DOWN;
-    editorCameraEventListener.callback = [](Event e){
+    // editorCam->SetEye(glm::vec3{0.f,0.f,1000.f});
+    EventListener editorCameraKeyboardEventListener = {};
+    editorCameraKeyboardEventListener .type = EVENT_TYPE_KEYBOARD_KEY_REPEAT;
+    editorCameraKeyboardEventListener .callback = [](Event e){
         switch(e.data.key_char)
         {
             case JIN_KEY_W:
             case JIN_KEY_UP:
-                Application::GetApp()->GetEditorCamera()->Move({0,0,5 * GetDeltaTime()});
+                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_FORWARD);
             break;
             case JIN_KEY_S:
             case JIN_KEY_DOWN:
-                Application::GetApp()->GetEditorCamera()->Move({0,0,-5 * GetDeltaTime()});
+                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_BACKWARD);
             break;
             case JIN_KEY_A:
             case JIN_KEY_LEFT:
-                Application::GetApp()->GetEditorCamera()->Move({5* GetDeltaTime(),0,0});
+                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_LEFT);
             break;
             case JIN_KEY_D:
             case JIN_KEY_RIGHT:
-                Application::GetApp()->GetEditorCamera()->Move({-5 * GetDeltaTime(),0,0});
+                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_RIGHT);
             break;
         }
     };
-    AddEventListener(editorCameraEventListener);
+    AddEventListener(editorCameraKeyboardEventListener);
+    EventListener editorCameraMouseEventListener = {};
+    editorCameraMouseEventListener.type = EVENT_TYPE_MOUSE_MOVE;
+    editorCameraMouseEventListener.callback = [](Event e)
+    {
+        static bool firstMouse = true; 
+        static float lastX = 0;
+        static float lastY = 0;
+        if ( firstMouse )
+        {
+            lastX = e.data.x;
+            lastY = e.data.y;
+            firstMouse = false;
+        }
+
+        float xOffset = e.data.x - lastX;
+        float yOffset = lastY - e.data.y;  // Reversed since y-coordinates go from bottom to left
+
+        lastX = e.data.x;
+        lastY = e.data.y;
+        Application::GetApp()->GetEditorCamera()->ProcessMouseMove(xOffset, yOffset);
+    };
+    AddEventListener(editorCameraMouseEventListener);
 
     cameraUBO = new UniformBufferObject(UNIFORM_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
     cameraUBO->SetBindingIndex(0);
@@ -266,10 +288,8 @@ void  Application::Run()
             ImGui::NewFrame();
         }
 
-        editorCam->Update();
-
         glm::mat4 cameraUBOData[2] = {
-            editorCam->GetProjection(), editorCam->GetView()
+            editorCam->GetProjectionMatrix((float)config.windowConfig.width, (float)config.windowConfig.height), editorCam->GetViewMatrix()
         };
         
         cameraUBO->SetSubData(0, sizeof(cameraUBOData), cameraUBOData);
@@ -306,8 +326,8 @@ void  Application::Run()
             if(ImGui::Begin("Debug"))
             {
 
-                ImGui::InputFloat3("Camera Position", (float*)editorCam->GetPosition());
-                ImGui::InputFloat3("Camera Rotation", (float*)editorCam->GetRotation());
+                // ImGui::InputFloat3("Camera Position", (float*)editorCam->GetPosition());
+                // ImGui::InputFloat3("Camera Rotation", (float*)editorCam->GetRotation());
 
                 ImGui::Text("Attached Layers");
                 for (int i = layers.size() - 1; i >= 0; i--)
@@ -373,12 +393,6 @@ void  Application::Run()
         layers[i]->OnEnd();
     }
     
-
-    // for(u32 i = layersCount; i > 0; --i)
-    // {
-    //     layers[i - 1]->OnEnd();
-    // }
-
     if(config.enable_imgui)
     {
         ImGui_ImplOpenGL3_Shutdown();

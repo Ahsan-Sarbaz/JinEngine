@@ -1,27 +1,41 @@
 #pragma once
 #include <glm/glm.hpp>
 
+enum CameraMovment
+{
+    CAMERA_MOVEMENT_FORWARD,
+    CAMERA_MOVEMENT_BACKWARD,
+    CAMERA_MOVEMENT_LEFT,
+    CAMERA_MOVEMENT_RIGHT,
+};
+
 class EditorCamera
 {
 private:
-    glm::mat4 view;
-    glm::mat4 proj;
-    float width, height, fov, near, far;
-    glm::vec3 eye, center, up;
     glm::vec3 position;
-    glm::vec3 rotation;
+    glm::vec3 front;
+    glm::vec3 up;
+    glm::vec3 right;
+    glm::vec3 worldUp;
+    
+    float yaw;
+    float pitch;
+    
+    float movementSpeed;
+    float mouseSensitivity;
+    float zoom;
+
 public:
     EditorCamera();
-    void Update();
-    
-    inline glm::mat4 GetView() { return view; }
-    inline glm::mat4 GetProjection() { return proj; }
+    void ProcessKeyboard(CameraMovment direction);
+    void ProcessMouseMove(float xoffset, float yoffset, bool  constrainPitch = true);
+    glm::mat4 GetViewMatrix();
+    glm::mat4 GetProjectionMatrix(float width, float height);
+    inline glm::vec3 GetPosition() { return position; }
+    inline glm::vec3 GetFront() { return front; }
+    inline float GetZoom() { return zoom; }
 
-    inline void SetEye(const glm::vec3& e) { eye = e; }
-    inline void SetCenter(const glm::vec3& c) { center = c; }
-    inline void SetUp(const glm::vec3& u) { up = u; }
-    inline void Move(const glm::vec3& by) { position += by; }
-    inline void Rotate(const glm::vec3& by) { rotation+= by; }
-    inline glm::vec3* GetPosition() { return &position; }
-    inline glm::vec3* GetRotation() { return &rotation; }
+
+private:
+    void Update();
 };

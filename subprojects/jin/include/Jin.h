@@ -25,3 +25,4 @@
 #include "KeyCodes.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "CubeMap.h"

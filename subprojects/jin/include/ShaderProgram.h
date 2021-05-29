@@ -20,7 +20,8 @@ public:
     void AttachShader(Shader* shader);
     void DetachShader(Shader* shader);
     b8 Link();
-    void Use();
+    void Bind();
+    void Unbind();
     i32 GetUniformLocation(const char* name);
     //TODO: use uniform location caching
     void SetUnifromInt(const char* name, i32 x);

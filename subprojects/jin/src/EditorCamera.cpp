@@ -1,19 +1,87 @@
 #include "EditorCamera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include "Time.h"
+#include "Application.h"
 
 EditorCamera::EditorCamera()
-    :fov(70.0f), width(800.0f), height(600.0f), near(0.1f), far(3000.0f), eye({0.0f,0.0f,10.0f}), center({0.0f,0.0f,0.0f}), up({0.0f,1.0f,0.0f}), position({0.0f,0.0f,0.0f}), rotation({0.0f,0.0f,0.0f})
+    :position({0.0f, 0.0f,0.0f}),up({0.0f, 1.0f,0.0f}),worldUp(up),front({0.0f, 0.0f,-1.0f}), movementSpeed(6.0f), yaw(-90.0f), pitch(0.0f),mouseSensitivity(0.25f), zoom(40.0f)
 {
-    proj = glm::perspectiveFov(fov, width, height, near, far);
-    view = glm::lookAt(eye, center, up);
+    ;
+    this->worldUp = up;
+    this->yaw = yaw;
+    this->pitch = pitch;
+    Update();
+}
+
+void EditorCamera::ProcessKeyboard(CameraMovment direction)
+{
+    float velocity = movementSpeed * GetDeltaTime();
+        
+    if (direction == CAMERA_MOVEMENT_FORWARD)
+    {
+        position += front * velocity;
+    }
+    
+    if (direction == CAMERA_MOVEMENT_BACKWARD)
+    {
+        position -= front * velocity;
+    }
+    
+    if (direction == CAMERA_MOVEMENT_LEFT)
+    {
+        position -= right * velocity;
+    }
+    
+    if (direction == CAMERA_MOVEMENT_RIGHT)
+    {
+        position += right * velocity;
+    }
+}
+
+void EditorCamera::ProcessMouseMove(float xoffset, float yoffset, bool  constrainPitch)
+{
+    xoffset *= mouseSensitivity;
+    yoffset *= mouseSensitivity;
+    
+    yaw   += xoffset;
+    pitch += yoffset;
+    
+    // Make sure that when pitch is out of bounds, screen doesn't get flipped
+    if ( constrainPitch )
+    {
+        if ( pitch > 89.0f )
+        {
+            pitch = 89.0f;
+        }
+        
+        if ( pitch < -89.0f )
+        {
+            pitch = -89.0f;
+        }
+    }
+    
+    // Update Front, Right and Up Vectors using the updated Eular angles
+    Update();
+}
+
+glm::mat4 EditorCamera::GetViewMatrix()
+{
+    return glm::lookAt(position, position + front, up);
+}
+
+glm::mat4 EditorCamera::GetProjectionMatrix(float width, float height)
+{
+    return glm::perspective(70.0f, width / height, 0.1f, 3000.0f);
 }
 
 void EditorCamera::Update()
 {
-    proj = glm::perspectiveFov(fov, width, height, near, far);
-    view = glm::lookAt(eye, center, up) * 
-    glm::rotate(glm::mat4(1.0f), glm::radians(rotation.x), {1.0f, 0.0f, 0.0f}) * 
-    glm::rotate(glm::mat4(1.0f), glm::radians(rotation.y), {0.0f, 1.0f, 0.0f}) *
-    glm::rotate(glm::mat4(1.0f), glm::radians(rotation.z), {0.0f, 0.0f, 1.0f}) *
-    glm::translate(glm::mat4(1.0f), position);
+    glm::vec3 new_front;
+    new_front.x = cos( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
+    new_front.y = sin( glm::radians( pitch ) );
+    new_front.z = sin( glm::radians( yaw ) ) * cos( glm::radians( pitch ) );
+    front = glm::normalize( new_front );
+
+    right = glm::normalize( glm::cross( front, worldUp ) );
+    up = glm::normalize( glm::cross( right, front ) );
 }

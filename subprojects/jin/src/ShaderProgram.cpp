@@ -80,9 +80,14 @@ b8 ShaderProgram::Link()
     return TRUE;
 }
 
-void ShaderProgram::Use()
+void ShaderProgram::Bind()
 {
     glUseProgram(id);
+}
+
+void ShaderProgram::Unbind()
+{
+    glUseProgram(0);
 }
 
 i32 ShaderProgram::GetUniformLocation(const char* name)

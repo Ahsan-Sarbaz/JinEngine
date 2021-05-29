@@ -10,6 +10,7 @@
 #include "Texture.h"
 #include "ShaderProgram.h"
 #include "Model.h"
+#include "CubeMap.h"
 
 struct Application;
 
@@ -61,6 +62,13 @@ struct BatchRendererData
 struct ThreeDRendererData
 {
     ShaderProgram* shader;
+    ShaderProgram* skyboxShader;
+
+    VAO* cubeVao;
+    VBO* cubeVbo;
+    IBO* cubeIbo;
+
+    ShaderProgram* userShader;
 };
 
 class Renderer
@@ -85,14 +93,14 @@ class Renderer
     
     
     // 3D renderer
-
     void DrawModel(Model* model);
-
+    void DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale);
+    void DrawSkybox(CubeMap* map);
     inline RendererConfiguration* GetConfig() { return &config; }
     inline BatchRendererData* GetBatchData() { return batchData; }
     inline BatchRendererStats* GetBatchStats() { return batchStats; }
     inline ThreeDRendererData* Get3DData() { return rendererData; }
-
+    inline void SetShader(ShaderProgram* program) { rendererData->userShader = program; }
     private:
     
     void AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor);

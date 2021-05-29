@@ -10,11 +10,22 @@ MainLayer::MainLayer(Application* app)
 void MainLayer::OnStart()
 {  
     model = new Model("res/models/bunny.fbx");
+    const char* skyPaths[6] = {
+        "res/textures/sky/posx.jpg",
+        "res/textures/sky/negx.jpg",
+        "res/textures/sky/posy.jpg",
+        "res/textures/sky/negy.jpg",
+        "res/textures/sky/posz.jpg",
+        "res/textures/sky/negz.jpg",
+    };
+
+    skyMap = new CubeMap(skyPaths);
 }
 
 void MainLayer::OnUpdate()
 {   
     app->GetRenderer()->DrawModel(model);
+    app->GetRenderer()->DrawSkybox(skyMap);
 }
 
 void MainLayer::OnEnd() 

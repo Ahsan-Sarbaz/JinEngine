@@ -168,7 +168,7 @@ Application::Application(const ApplicationConfiguration& _config)
     editorCam = new EditorCamera();
     // editorCam->SetEye(glm::vec3{0.f,0.f,1000.f});
     EventListener editorCameraKeyboardEventListener = {};
-    editorCameraKeyboardEventListener .type = EVENT_TYPE_KEYBOARD_KEY_REPEAT;
+    editorCameraKeyboardEventListener .type = EVENT_TYPE_KEYBOARD_KEY_REPEAT | EVENT_TYPE_KEYBOARD_KEY_DOWN;
     editorCameraKeyboardEventListener .callback = [](Event e){
         switch(e.data.key_char)
         {
@@ -254,7 +254,7 @@ void  Application::Run()
         {
             for (auto &&event : events)
             {
-                if(listner.type == event.type)
+                if(listner.type & event.type)
                 {
                     listner.callback(event);
                 }

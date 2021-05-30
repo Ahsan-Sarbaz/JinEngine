@@ -9,7 +9,7 @@ MainLayer::MainLayer(Application* app)
 
 void MainLayer::OnStart()
 {  
-    model = new Model("res/models/bunny.fbx");
+    model = new Model("res/models/Car.dae");
     const char* skyPaths[6] = {
         "res/textures/sky/posx.jpg",
         "res/textures/sky/negx.jpg",

@@ -1,10 +1,6 @@
 #pragma once
 #include "Types.h"
 #include "Shader.h"
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4.h"
 
 class ShaderProgram
 {
@@ -30,10 +26,9 @@ public:
     void SetUnifromFloat2(const char* name, float x, float y);
     void SetUnifromFloat3(const char* name, float x, float y, float z);
     void SetUnifromFloat4(const char* name, float x, float y, float z, float w);
-    void SetUniformVector2(const char* name, const Vector2& vec);
-    void SetUniformVector3(const char* name, const Vector3& vec);
-    void SetUniformVector4(const char* name, const Vector4& vec);
-    void SetUniformMatrix4(const char* name, const Matrix4& mat);    
+    void SetUniformVector2(const char* name, const glm::vec2& vec);
+    void SetUniformVector3(const char* name, const glm::vec3& vec);
+    void SetUniformVector4(const char* name, const glm::vec4& vec);
     void SetUniformMatrix4(const char* name, const glm::mat4& mat);
 
     inline u32 GetId() { return id; }  

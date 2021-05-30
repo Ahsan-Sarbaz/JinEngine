@@ -70,12 +70,12 @@ Model::Model(const char* path)
         ibo[i] = new IndexBufferObject(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);    
         vao[i]->Init();
 
-        vbo[i]->SetData(sizeof(vec3) * meshes[i]->GetVerticesCount(), meshes[i]->GetVerticesData());
+        vbo[i]->SetData(sizeof(glm::vec3) * meshes[i]->GetVerticesCount(), meshes[i]->GetVerticesData());
         ibo[i]->SetData(sizeof(u32) * meshes[i]->GetIndicesCount(), meshes[i]->GetIndicesData());
         ibo[i]->SetCount(meshes[i]->GetIndicesCount());
 
         VertexBufferObjectLayout layout[1] = {
-            {0, 3, VERTEX_BUFFER_OBJECT_LAYOUT_TYPE_FLOAT, sizeof(vec3), 0}
+            {0, 3, VERTEX_BUFFER_OBJECT_LAYOUT_TYPE_FLOAT, sizeof(glm::vec3), 0}
         };
 
         vbo[i]->SetLayout(layout, 1);

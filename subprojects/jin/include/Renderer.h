@@ -1,8 +1,5 @@
 #pragma once
 #include "Types.h"
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
 #include "Rect.h"
 #include "VertexArrayObject.h"
 #include "VertexBufferObject.h"
@@ -27,9 +24,9 @@ struct RendererConfiguration
 
 struct BatchRendererVertex
 {
-    v2 position;
-    v4 color;
-    v2 uv;
+    glm::vec2 position;
+    glm::vec4 color;
+    glm::vec2 uv;
     float texture_id;
     float tiling_factor;
 };
@@ -82,9 +79,9 @@ class Renderer
     Renderer() = default;
     ~Renderer();
     Renderer(const RendererConfiguration& config);
-    void DrawQuad(const v2& position, const v2& size, const v4& color);
-    void DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
-    void DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const v4& color = {1.0f,1.0f,1.0f,1.0f});
+    void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
+    void DrawTexturedQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, float tiling_factor = 1.0f, const glm::vec4& color = {1.0f,1.0f,1.0f,1.0f});
+    void DrawTexturedRectQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const glm::vec4& color = {1.0f,1.0f,1.0f,1.0f});
     void StartNewBatch();
     void UploadCurrentBatch();
     void DrawCurrentBatch();
@@ -103,9 +100,7 @@ class Renderer
     inline void SetShader(ShaderProgram* program) { rendererData->userShader = program; }
     private:
     
-    void AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor);
-    void AddTexturedQuadToBuffer(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor, const v4& color);
-
-  
+    void AddQuadToBuffer(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const frect& rect, float texture_id, float tiling_factor);
+    void AddTexturedQuadToBuffer(const glm::vec2& position, const glm::vec2& size, Texture* texture, const RectF& rect, float tiling_factor, const glm::vec4& color);
 };
 

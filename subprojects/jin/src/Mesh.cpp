@@ -2,7 +2,7 @@
 
 Mesh::Mesh(u32 vertices_count, u32 indices_count)
 {
-    vertices = std::vector<Vector3>();
+    vertices = std::vector<glm::vec3>();
     indices = std::vector<u32>();
     vertices.reserve(vertices_count);
     indices.reserve(indices_count);

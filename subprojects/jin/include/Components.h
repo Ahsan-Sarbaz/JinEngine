@@ -1,9 +1,5 @@
 #pragma once
 #include "Texture.h"
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4.h"
 #include "SpriteSheet.h"
 #include "SpriteSheetAnimation.h"
 
@@ -17,9 +13,9 @@ struct TagComponent
 
 struct TransformComponent
 {
-    Vector3 position;
-    Vector3 rotation;
-    Vector3 size;
+    glm::vec3 position;
+    glm::vec3 rotation;
+    glm::vec3 scale;
 };
 
 struct SpriteComponent

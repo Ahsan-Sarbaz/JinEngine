@@ -5,7 +5,6 @@
 #include "Time.h"
 
 #include <GL/glew.h>
-#include <glm/gtc/matrix_transform.hpp>
 
 Renderer::Renderer(const RendererConfiguration& _config)
 {
@@ -348,7 +347,7 @@ Renderer::~Renderer()
 }
 
 
-void Renderer::AddQuadToBuffer(const v2& position, const v2& size, const v4& color, const frect& rect, float texture_id, float tiling_factor)
+void Renderer::AddQuadToBuffer(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const frect& rect, float texture_id, float tiling_factor)
 {
     batchData->buffer_ptr->position = position;
     batchData->buffer_ptr->color = color;
@@ -384,7 +383,7 @@ void Renderer::AddQuadToBuffer(const v2& position, const v2& size, const v4& col
     batchStats->vertex_count+=4;
 }
 
-void Renderer::AddTexturedQuadToBuffer(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor, const v4& color)
+void Renderer::AddTexturedQuadToBuffer(const glm::vec2& position, const glm::vec2& size, Texture* texture, const RectF& rect, float tiling_factor, const glm::vec4& color)
 {
     if(batchData->indexCount >= config.batch_renderer_max_indices)
     {
@@ -425,17 +424,17 @@ void Renderer::AddTexturedQuadToBuffer(const v2& position, const v2& size, Textu
     AddQuadToBuffer(position, size, color, rect, (float)texture_unit, tiling_factor);
 }
 
-void Renderer::DrawQuad(const v2& position, const v2& size, const v4& color)
+void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 {
     AddTexturedQuadToBuffer(position, size, nullptr, {0,0,1,1}, 1, color);
 }
 
-void Renderer::DrawTexturedQuad(const v2& position, const v2& size, Texture* texture, float tiling_factor, const v4& color)
+void Renderer::DrawTexturedQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, float tiling_factor, const glm::vec4& color)
 {
     AddTexturedQuadToBuffer(position, {size.x  == 0 ? texture->GetWidth() : size.x , size.y  == 0 ? texture->GetHeight() : size.y} , texture, {0,0,1,1}, tiling_factor, color);
 }
 
-void Renderer::DrawTexturedRectQuad(const v2& position, const v2& size, Texture* texture, const RectF& rect, float tiling_factor, const v4& color)
+void Renderer::DrawTexturedRectQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, const RectF& rect, float tiling_factor, const glm::vec4& color)
 {
     AddTexturedQuadToBuffer(position, size, texture, rect, tiling_factor, color);
 }
@@ -475,9 +474,9 @@ void Renderer::DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count)
 void Renderer::DrawCurrentBatch()
 {
     UploadCurrentBatch();
-    m4 model = glm::mat4(1.0f);
-    m4 view = glm::mat4(1.0f);
-    m4 proj = glm::ortho(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 proj = glm::ortho(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
 
     batchData->batchShader->Bind();
     batchData->batchShader->SetUniformMatrix4("u_model", model);

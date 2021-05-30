@@ -1,7 +1,6 @@
 #include "ShaderProgram.h"
 #include "Logger.h"
 #include <GL/glew.h>
-#include <glm/gtc/type_ptr.hpp>
 
 void ShaderProgram::Init()
 {
@@ -130,30 +129,23 @@ void ShaderProgram::SetUnifromFloat4(const char* name, float x, float y, float z
     glUniform4f(location, x, y, z, w);
 }
 
-void ShaderProgram::SetUniformVector2(const char* name, const Vector2& vec)
+void ShaderProgram::SetUniformVector2(const char* name, const glm::vec2& vec)
 {
     auto location = glGetUniformLocation(id, name);
-    glUniform2fv(location, 1, vec.data);
+    glUniform2fv(location, 1, glm::value_ptr(vec));
 }
 
-void ShaderProgram::SetUniformVector3(const char* name, const Vector3& vec)
+void ShaderProgram::SetUniformVector3(const char* name, const glm::vec3& vec)
 {
     auto location = glGetUniformLocation(id, name);
-    glUniform3fv(location, 1, vec.data);
+    glUniform3fv(location, 1, glm::value_ptr(vec));
 }
 
-void ShaderProgram::SetUniformVector4(const char* name, const Vector4& vec)
+void ShaderProgram::SetUniformVector4(const char* name, const glm::vec4& vec)
 {
     auto location = glGetUniformLocation(id, name);
-    glUniform4fv(location, 1, vec.data);
+    glUniform4fv(location, 1, glm::value_ptr(vec));
 }
-
-void ShaderProgram::SetUniformMatrix4(const char* name, const Matrix4& mat)
-{
-    auto location = glGetUniformLocation(id, name);
-    glUniformMatrix4fv(location, 1, 0, *mat.data);
-}
-
  
 void ShaderProgram::SetUniformMatrix4(const char* name, const glm::mat4& mat)
 {

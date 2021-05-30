@@ -5,12 +5,10 @@
 #include "Time.h"
 #include "Entity.h"
 #include "Components.h"
-#include "Maths.h"
 #include "KeyCodes.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/gtc/type_ptr.hpp>
 
 // TODO: NOTE: this is to be controlled at build time
 #define ENABLE_IMGUI 1
@@ -305,7 +303,7 @@ void  Application::Run()
             auto& tranfrom = registry.get<TransformComponent>(entity);
             auto& spriteCompnonent = registry.get<SpriteComponent>(entity);
 
-            renderer->DrawTexturedQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), spriteCompnonent.texture);
+            renderer->DrawTexturedQuad(tranfrom.position, tranfrom.scale, spriteCompnonent.texture);
         }
 
         for(auto& entity : registry.view<SpriteSheetAnimationComponent>())
@@ -313,7 +311,7 @@ void  Application::Run()
             auto& tranfrom = registry.get<TransformComponent>(entity);
             auto& anim = registry.get<SpriteSheetAnimationComponent>(entity);
 
-            renderer->DrawTexturedRectQuad(ToVec2(tranfrom.position), ToVec2(tranfrom.size), anim.spriteSheetAnimation->GetSpriteSheet()->GetConfig().texture, 
+            renderer->DrawTexturedRectQuad(tranfrom.position, tranfrom.scale, anim.spriteSheetAnimation->GetSpriteSheet()->GetConfig().texture, 
             anim.spriteSheetAnimation->GetSpriteSheet()->GetRect(anim.spriteSheetAnimation->GetLayout().current_frame));
             anim.spriteSheetAnimation->Update();
         }
@@ -357,7 +355,7 @@ void  Application::Run()
                     {
                         ImGui::Text("Position: %.2f, %.2f, %.2f", transform->position.x, transform->position.y, transform->position.z);
                         ImGui::Text("Rotation: %.2f, %.2f, %.2f", transform->rotation.x, transform->rotation.y, transform->rotation.z);
-                        ImGui::Text("Size:     %.2f, %.2f, %.2f", transform->size.x, transform->size.y, transform->size.z);
+                        ImGui::Text("Size:     %.2f, %.2f, %.2f", transform->scale.x, transform->scale.y, transform->scale.z);
                     }
 
                     ImGui::Separator();

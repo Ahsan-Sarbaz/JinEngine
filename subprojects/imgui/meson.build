@@ -17,7 +17,7 @@ glew_dep = dependency('glew')
 dependencies += glfw_dep
 dependencies += glew_dep
 
-imgui = library('imgui',
+imgui = static_library('imgui',
     sources,
     dependencies: dependencies,
     include_directories: include_dirs,

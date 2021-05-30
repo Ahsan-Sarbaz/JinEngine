@@ -1,5 +1,5 @@
 project('jin', 'cpp',
-    version: '0.1 WIP',
+    version: '0.2 WIP',
     default_options: ['cpp_std=c++17']
 )
 
@@ -41,7 +41,7 @@ args+='-Og'
 args+='-Wno-everything'
 
 
-jin = library('jin',
+jin = static_library('jin',
     sources,
     dependencies: [glfw_dep, glew_dep, gl_dep, assimp_dep, imgui_dep],
     include_directories: include_dirs,

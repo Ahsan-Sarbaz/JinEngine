@@ -6,6 +6,7 @@ Level::Level(const char* _name)
 {
     root = new Entity(registry.create(), this);
     root->AddComponent<TagComponent>("root");
+    root->AddComponent<TransformComponent>();
 }
 
 Entity* Level::CreateEntity(const char *name)
@@ -24,5 +25,6 @@ Entity* Level::AddChild(Entity *parent, const char* name)
 {
     auto child = parent->AddChild(new Entity(registry.create(), this));
     child->AddComponent<TagComponent>(name);
+    child->AddComponent<TransformComponent>();
     return child;
 }

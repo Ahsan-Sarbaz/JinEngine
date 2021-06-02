@@ -226,10 +226,30 @@ Application::Application(const ApplicationConfiguration& _config)
     cameraUBO = new UniformBufferObject(UNIFORM_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
     cameraUBO->SetBindingIndex(0);
     cameraUBO->SetData(sizeof(glm::mat4) * 2 + sizeof(glm::vec3), nullptr);
+
+    FramebufferConfiguration framebufferConfig = {};
+    framebufferConfig.width = config.windowConfig.width;
+    framebufferConfig.height= config.windowConfig.height;
+    framebufferConfig.samples = 1;
+    framebufferConfig.attachmentConfigs.push_back({FRAMEBUFFER_ATTACHMENT_FORMAT_RGBA8});
+    framebufferConfig.attachmentConfigs.push_back({FRAMEBUFFER_ATTACHMENT_FORMAT_DEPTH});
+    renderTarget = new Framebuffer(framebufferConfig);
+    if(!renderTarget->IsComplete())
+    {
+        LOG_FATAL("Render Target not complete!\n");
+        return;
+    }
+
+    EventListener renderTargetResizeEventListener = {};
+    renderTargetResizeEventListener.type = EVENT_TYPE_FRAME_BUFFER_RESIZE;
+    renderTargetResizeEventListener.callback = [](Event e) {
+        Application::GetInstance()->GetRenderTarget()->Invalidate();
+    };
 }
 
 Application::~Application()
 {
+    delete renderTarget;
     delete cameraUBO;
     delete editorCam;
     delete renderer;
@@ -282,10 +302,18 @@ void  Application::Run()
         {
             glfwSetWindowShouldClose(window->GetHandle(), 1);
         }
-
-        glViewport(0, 0, config.windowConfig.width, config.windowConfig.height);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+        struct CameraUBOLayout
+        {
+            glm::mat4 projection;
+            glm::mat4 view;
+            glm::vec3 position;
+        } cameraUBOData = {
+            editorCam->GetProjectionMatrix((float)renderTarget->GetConfig()->width, (float)renderTarget->GetConfig()->height), editorCam->GetViewMatrix(), editorCam->GetPosition()
+        };
+        
+        cameraUBO->SetSubData(0, sizeof(cameraUBOData), &cameraUBOData);
+        
         if(config.enable_imgui)
         {
             ImGui_ImplOpenGL3_NewFrame();
@@ -297,26 +325,25 @@ void  Application::Run()
             }
         }
 
-        struct CameraUBOLayout
-        {
-            glm::mat4 projection;
-            glm::mat4 view;
-            glm::vec3 position;
-        } cameraUBOData = {
-            editorCam->GetProjectionMatrix((float)config.windowConfig.width, (float)config.windowConfig.height), editorCam->GetViewMatrix(), editorCam->GetPosition()
-        };
-        
-        cameraUBO->SetSubData(0, sizeof(cameraUBOData), &cameraUBOData);
-        
         for (int i = layers.size() - 1; i >= 0; i--)
         {
             layers[i]->OnUpdate();
         }
 
+        renderTarget->Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         if(currentLevel != nullptr)
         {
             if(currentLevel->skybox != nullptr)
                 renderer->DrawSkybox(currentLevel->skybox);
+
+            for(auto& entity : currentLevel->registry.view<ModelComponent>())
+            {
+                auto materialComp = currentLevel->registry.try_get<MaterialComponent>(entity);
+                auto& modelComp = currentLevel->registry.get<ModelComponent>(entity);
+                renderer->DrawModel(modelComp.model, materialComp ? materialComp->material : nullptr);
+            }
 
             renderer->StartNewBatch();
 
@@ -340,10 +367,14 @@ void  Application::Run()
 
             renderer->DrawCurrentBatch();
         }
+
+        renderTarget->Unbind();
+
         if(config.enable_imgui)
         {
             if(ImGui::Begin("Debug"))
             {
+                ImGui::Text("Render Target Size: %d x %d", renderTarget->GetConfig()->width, renderTarget->GetConfig()->height);
                 ImGui::Text("Attached Layers");
 
                 for (int i = layers.size() - 1; i >= 0; i--)
@@ -370,7 +401,7 @@ void  Application::Run()
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
-        
+
         glfwSwapBuffers(window->GetHandle());
     }
 

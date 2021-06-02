@@ -6,7 +6,7 @@
 #include "UniformBufferObject.h"
 #include "Window.h"
 #include "Level.h"
-
+#include "Framebuffer.h"
 #include <vector>
 
 
@@ -34,6 +34,7 @@ class Application
     EditorCamera *editorCam;
     UniformBufferObject *cameraUBO;
     Level* currentLevel;
+    Framebuffer* renderTarget;
 
   public:
     Application() = default;
@@ -79,5 +80,10 @@ class Application
     inline Level* GetCurrentLevel()
     {
         return currentLevel;
+    }
+
+    inline Framebuffer* GetRenderTarget()
+    {
+        return renderTarget;
     }
 };

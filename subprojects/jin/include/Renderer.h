@@ -90,11 +90,11 @@ public:
     void DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count);
     void ResetRendererStats();
     
-    
     // 3D renderer
-    void DrawModel(Model* model, Material* material = GetDefaultMaterial());
-    void DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* mat = GetDefaultMaterial());
+    void DrawModel(Model* model, Material* material = nullptr);
+    void DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* material = nullptr);
     void DrawSkybox(CubeMap* map);
+
     inline RendererConfiguration* GetConfig() { return &config; }
     inline BatchRendererData* GetBatchData() { return batchData; }
     inline BatchRendererStats* GetBatchStats() { return batchStats; }

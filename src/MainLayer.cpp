@@ -11,7 +11,7 @@ MainLayer::MainLayer()
 void MainLayer::OnStart()
 {  
     // model = new Model("res/models/bunny.fbx");
-    model = new Model(Mesh::CreateCubeMesh());
+     model = new Model(Mesh::CreateCubeMesh());
 
     const char* skyPaths[6] = {
         "res/textures/sky/posx.jpg",
@@ -31,18 +31,25 @@ void MainLayer::OnStart()
     Application::GetInstance()->SetCurrentLevel(level);
 
     auto cube = level->CreateEntity("cube");
-    auto anotherCube = level->AddChild(cube, "anotherCube");
-    auto yetAnotherCube = level->AddChild(cube, "yetAnotherCube");
-
-    auto cube1 = level->CreateEntity("cube1");
-    auto anotherCube1 = level->AddChild(cube1, "anotherCube1");
-    auto yetAnotherCube1 = level->AddChild(anotherCube1, "yetAnotherCube1");
+    cube->AddComponent<ModelComponent>(model);
 }
 
 void MainLayer::OnUpdate()
 {   
-    Application::GetInstance()->GetRenderer()->DrawModel(model);
+//    Application::GetInstance()->GetRenderer()->DrawModel(model);
     ImGuiDrawLevelPanel();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
+    ImGui::Begin("ViewPort", 0);
+    static ImVec2 lastAvail = ImVec2{0,0};
+    auto avail = ImGui::GetContentRegionAvail();
+    if(avail.x != lastAvail.x || avail.y != lastAvail.y)
+    {
+        Application::GetInstance()->GetRenderTarget()->Resize((u32)avail.x, (u32)avail.y);
+        lastAvail = avail;
+    }
+    ImGui::Image((ImTextureID)Application::GetInstance()->GetRenderTarget()->GetAttachmentId(0), avail, { 0,1 }, {1,0});
+    ImGui::End();
+    ImGui::PopStyleVar();
 }
 
 void MainLayer::OnEnd() 

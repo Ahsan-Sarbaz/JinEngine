@@ -15,6 +15,8 @@ enum EventType : u32
     
     EVENT_TYPE_WINDOW_RESIZE = 0x100,
     EVENT_TYPE_MOUSE_MOVE = 0x200,
+
+    EVENT_TYPE_FRAME_BUFFER_RESIZE = 0x400
     
 };
 
@@ -47,8 +49,8 @@ struct EventData
 
         struct
         {
-            double width;
-            double height;
+            u32 width;
+            u32 height;
         };
         
     };

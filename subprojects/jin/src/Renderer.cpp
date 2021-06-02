@@ -514,19 +514,21 @@ void Renderer::ResetRendererStats()
 
 void Renderer::DrawModel(Model* model, Material* material)
 {
+    if(material == nullptr) material = rendererData->defaultMat;
+    material->GetProgram()->Bind();
     for (u32 i = 0; i < model->GetMeshCount(); i++)
     {
-        material->GetProgram()->Bind();
         DrawVertexArrayObject(model->GetVAO(i), model->GetIBO(i)->GetCount());
-        material->GetProgram()->Unbind();
-    }   
+    }
+    material->GetProgram()->Unbind();
 }
 
-void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* mat)
+void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* material)
 {
-    mat->GetProgram()->Bind();
+    if(material == nullptr) material = rendererData->defaultMat;
+    material->GetProgram()->Bind();
     DrawVertexArrayObject(rendererData->cubeVao, rendererData->cubeIbo->GetCount());
-    mat->GetProgram()->Unbind();
+    material->GetProgram()->Unbind();
 }
 
 void Renderer::DrawSkybox(CubeMap* map)

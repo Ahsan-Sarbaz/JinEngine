@@ -1,6 +1,7 @@
 #include "CubeMap.h"
 
 #include "IO.h"
+#include "Logger.h"
 
 #include <GL/glew.h>
 #include <stb_image.h>
@@ -17,6 +18,11 @@ CubeMap::CubeMap(const char** path)
         i32 size = 0;
         i32 width = 0 , height = 0, channels = 0;
         auto success = ReadTextureToBuffer(path[i], &buffer, &size, &width, &height, &channels);
+        if(!success)
+        {
+            LOG_TRACE("Failed to read file %s\n", path[i]);
+            return;
+        }
         GLenum internalFormat = 0;
         GLenum format = 0;
         if(channels == 3)
@@ -48,10 +54,12 @@ CubeMap::CubeMap(const char** path)
 
 void CubeMap::Bind()
 {
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 }
 
 void CubeMap::Unbind()
 {
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }

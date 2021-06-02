@@ -16,7 +16,9 @@ void Window::Init(const WindowConfiguration& _config)
         monitor = glfwGetPrimaryMonitor();
         glfwGetMonitorWorkarea(monitor,0,0, &config.width, &config.height);
     }
-    
+
+    if(config.maximized)
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
     handle = glfwCreateWindow(config.width, config.height, config.title, monitor, 0);
     if(handle == nullptr)
     {

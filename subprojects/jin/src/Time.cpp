@@ -1,39 +1,39 @@
 #include "Time.h"
 #include "Application.h"
 
-Time* time;
+Time* jin_time;
 
 const Time& GetTime()
 {
-    return *time;
+    return *jin_time;
 }
 
 double GetDeltaTime()
 {
-    return time->delta_time;
+    return jin_time->delta_time;
 }
 
 double GetDeltaTimeMs()
 {
-    return time->delta_time_ms;
+    return jin_time->delta_time_ms;
 }
 
 double GetTimeSinceStart()
 {
-    return time->time_scale;
+    return jin_time->time_scale;
 }
 
 double GetTimeScale()
 {
-    return time->time_since_start;
+    return jin_time->time_since_start;
 }
 
 void SetTimeScale(double scale)
 {
-    time->time_scale = scale;
+    jin_time->time_scale = scale;
 }
 
 Time** GetTimeInternal()
 {
-    return &time; 
+    return &jin_time;
 }

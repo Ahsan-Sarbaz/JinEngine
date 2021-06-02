@@ -1,6 +1,6 @@
 project('jin', 'cpp',
     version: '0.2 WIP',
-    default_options: ['cpp_std=c++17']
+    default_options: ['cpp_std=c++20']
 )
 
 include_dirs = include_directories('include')
@@ -27,6 +27,8 @@ sources += 'src/Model.cpp'
 sources += 'src/EditorCamera.cpp'
 sources += 'src/UniformBufferObject.cpp'
 sources += 'src/CubeMap.cpp'
+sources += 'src/Material.cpp'
+sources += 'src/Level.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')
@@ -35,17 +37,10 @@ assimp_dep = dependency('assimp')
 imgui = subproject('imgui')
 imgui_dep = imgui.get_variable('imgui_dep')
 
-args = []
-args+='-g'
-args+='-Og'
-args+='-Wno-everything'
-
-
 jin = static_library('jin',
     sources,
     dependencies: [glfw_dep, glew_dep, gl_dep, assimp_dep, imgui_dep],
     include_directories: include_dirs,
-    cpp_args: args
 )
 
 jin_dep = declare_dependency(include_directories: include_dirs, link_with: jin)

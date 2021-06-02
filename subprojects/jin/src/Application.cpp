@@ -26,7 +26,7 @@ static void glfw_error_callback(int error, const char* description)
 
 static void glfw_window_framebuffer_resize(GLFWwindow* window, int width, int height)
 {
-    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    auto app = Application::GetInstance();
     app->GetConfig()->windowConfig.width = width;
     app->GetConfig()->windowConfig.height = height;
 
@@ -39,7 +39,7 @@ static void glfw_window_framebuffer_resize(GLFWwindow* window, int width, int he
 
 static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int action, int mod)
 {
-    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    auto app = Application::GetInstance();
     Event e = {};
     e.data.key_char = key;
     e.data.key_mods = mod;
@@ -61,7 +61,7 @@ static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int act
 
 static void glfw_cursor_pos_callback(GLFWwindow* window, double x, double y)
 {
-    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    auto app =  Application::GetInstance();
     Event e = {};
     e.type = EVENT_TYPE_MOUSE_MOVE;
     e.data.real_double[0] = x;
@@ -71,7 +71,7 @@ static void glfw_cursor_pos_callback(GLFWwindow* window, double x, double y)
 
 static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mod)
 {
-    auto app =  (Application*)glfwGetWindowUserPointer(window);
+    auto app =  Application::GetInstance();
     Event e = {};
     e.data.signed_int[0] = button;
     if (action == GLFW_PRESS)
@@ -170,23 +170,32 @@ Application::Application(const ApplicationConfiguration& _config)
     EventListener editorCameraKeyboardEventListener = {};
     editorCameraKeyboardEventListener .type = EVENT_TYPE_KEYBOARD_KEY_REPEAT | EVENT_TYPE_KEYBOARD_KEY_DOWN;
     editorCameraKeyboardEventListener .callback = [](Event e){
+        float last_speed = Application::GetInstance()->GetEditorCamera()->GetMovementSpeed();
         switch(e.data.key_char)
         {
             case JIN_KEY_W:
             case JIN_KEY_UP:
-                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_FORWARD);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
+                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_FORWARD);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
             break;
             case JIN_KEY_S:
             case JIN_KEY_DOWN:
-                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_BACKWARD);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
+                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_BACKWARD);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
             break;
             case JIN_KEY_A:
             case JIN_KEY_LEFT:
-                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_LEFT);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
+                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_LEFT);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
             break;
             case JIN_KEY_D:
             case JIN_KEY_RIGHT:
-                Application::GetApp()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_RIGHT);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
+                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_RIGHT);
+                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
             break;
         }
     };
@@ -210,13 +219,13 @@ Application::Application(const ApplicationConfiguration& _config)
 
         lastX = e.data.x;
         lastY = e.data.y;
-        Application::GetApp()->GetEditorCamera()->ProcessMouseMove(xOffset, yOffset);
+        Application::GetInstance()->GetEditorCamera()->ProcessMouseMove(xOffset, yOffset);
     };
     AddEventListener(editorCameraMouseEventListener);
 
     cameraUBO = new UniformBufferObject(UNIFORM_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
     cameraUBO->SetBindingIndex(0);
-    cameraUBO->SetData(sizeof(glm::mat4) * 2, nullptr);
+    cameraUBO->SetData(sizeof(glm::mat4) * 2 + sizeof(glm::vec3), nullptr);
 }
 
 Application::~Application()
@@ -238,13 +247,11 @@ void  Application::Run()
         layers[i]->OnStart();
     }
 
-    double current_time = glfwGetTime();
+    double current_time;
     double prev_time = glfwGetTime();
-    double delta_time = current_time - prev_time;
+    double delta_time;
     
     auto time = GetTimeInternal();
-
-    auto registry = GetEnTTRegistry();
 
     while (!glfwWindowShouldClose(window->GetHandle()))
     {
@@ -284,49 +291,61 @@ void  Application::Run()
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
+            if(config.enable_imgui_docking)
+            {
+                ImGui::DockSpaceOverViewport();
+            }
         }
 
-        glm::mat4 cameraUBOData[2] = {
-            editorCam->GetProjectionMatrix((float)config.windowConfig.width, (float)config.windowConfig.height), editorCam->GetViewMatrix()
+        struct CameraUBOLayout
+        {
+            glm::mat4 projection;
+            glm::mat4 view;
+            glm::vec3 position;
+        } cameraUBOData = {
+            editorCam->GetProjectionMatrix((float)config.windowConfig.width, (float)config.windowConfig.height), editorCam->GetViewMatrix(), editorCam->GetPosition()
         };
         
-        cameraUBO->SetSubData(0, sizeof(cameraUBOData), cameraUBOData);
+        cameraUBO->SetSubData(0, sizeof(cameraUBOData), &cameraUBOData);
         
         for (int i = layers.size() - 1; i >= 0; i--)
         {
             layers[i]->OnUpdate();
         }
 
-        renderer->StartNewBatch();
-        for(auto& entity : registry.view<SpriteComponent>())
+        if(currentLevel != nullptr)
         {
-            auto& tranfrom = registry.get<TransformComponent>(entity);
-            auto& spriteCompnonent = registry.get<SpriteComponent>(entity);
+            if(currentLevel->skybox != nullptr)
+                renderer->DrawSkybox(currentLevel->skybox);
 
-            renderer->DrawTexturedQuad(tranfrom.position, tranfrom.scale, spriteCompnonent.texture);
+            renderer->StartNewBatch();
+
+            for(auto& entity : currentLevel->registry.view<SpriteComponent>())
+            {
+                auto& tranfrom = currentLevel->registry.get<TransformComponent>(entity);
+                auto& spriteCompnonent = currentLevel->registry.get<SpriteComponent>(entity);
+
+                renderer->DrawTexturedQuad(tranfrom.position, tranfrom.scale, spriteCompnonent.texture);
+            }
+
+            for(auto& entity : currentLevel->registry.view<SpriteSheetAnimationComponent>())
+            {
+                auto& tranfrom = currentLevel->registry.get<TransformComponent>(entity);
+                auto& anim = currentLevel->registry.get<SpriteSheetAnimationComponent>(entity);
+
+                renderer->DrawTexturedRectQuad(tranfrom.position, tranfrom.scale, anim.spriteSheetAnimation->GetSpriteSheet()->GetConfig().texture,
+                anim.spriteSheetAnimation->GetSpriteSheet()->GetRect(anim.spriteSheetAnimation->GetLayout().current_frame));
+                anim.spriteSheetAnimation->Update();
+            }
+
+            renderer->DrawCurrentBatch();
         }
-
-        for(auto& entity : registry.view<SpriteSheetAnimationComponent>())
-        {
-            auto& tranfrom = registry.get<TransformComponent>(entity);
-            auto& anim = registry.get<SpriteSheetAnimationComponent>(entity);
-
-            renderer->DrawTexturedRectQuad(tranfrom.position, tranfrom.scale, anim.spriteSheetAnimation->GetSpriteSheet()->GetConfig().texture, 
-            anim.spriteSheetAnimation->GetSpriteSheet()->GetRect(anim.spriteSheetAnimation->GetLayout().current_frame));
-            anim.spriteSheetAnimation->Update();
-        }
-
-        renderer->DrawCurrentBatch();
-
         if(config.enable_imgui)
         {
             if(ImGui::Begin("Debug"))
             {
-
-                // ImGui::InputFloat3("Camera Position", (float*)editorCam->GetPosition());
-                // ImGui::InputFloat3("Camera Rotation", (float*)editorCam->GetRotation());
-
                 ImGui::Text("Attached Layers");
+
                 for (int i = layers.size() - 1; i >= 0; i--)
                 {
                     ImGui::Text("Layer: %s", layers[i]->GetName());
@@ -345,36 +364,6 @@ void  Application::Run()
                 }
 
                 renderer->ResetRendererStats();
-                ImGui::Text("Enitites");
-                for(auto& entity : registry.view<TagComponent>())
-                {
-                    ImGui::Text("Name: %s",  registry.get<TagComponent>(entity).name);
-
-                    TransformComponent* transform;
-                    if((transform = registry.try_get<TransformComponent>(entity)) != nullptr)
-                    {
-                        ImGui::Text("Position: %.2f, %.2f, %.2f", transform->position.x, transform->position.y, transform->position.z);
-                        ImGui::Text("Rotation: %.2f, %.2f, %.2f", transform->rotation.x, transform->rotation.y, transform->rotation.z);
-                        ImGui::Text("Size:     %.2f, %.2f, %.2f", transform->scale.x, transform->scale.y, transform->scale.z);
-                    }
-
-                    ImGui::Separator();
-
-                    SpriteSheetAnimationComponent* spriteSheetAnimComp;
-                    if((spriteSheetAnimComp = registry.try_get<SpriteSheetAnimationComponent>(entity)) != nullptr)
-                    {
-
-                        ImGui::Text("Anim Name: %s", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().name);
-                        ImGui::Text("Anim Start: %d", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().start_frame);
-                        ImGui::Text("Anim End: %d", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().end_frame);
-                        ImGui::Text("Anim FPS: %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().frames_per_second);
-                        ImGui::Text("Anim Total Time: %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().total_time);
-                        ImGui::Text("Anim Time Accum: %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().time_accumulator);
-                        ImGui::Text("Anim Time Step:  %f", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().time_step);
-                        ImGui::Text("Anim Current Frame: %d", spriteSheetAnimComp->spriteSheetAnimation->GetLayout().current_frame);
-                        ImGui::Separator();                    
-                    }
-                }
                 ImGui::End();
             }
 

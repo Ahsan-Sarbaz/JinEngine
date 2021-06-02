@@ -10,7 +10,10 @@ void Texture::InitFromFile(const char* path)
     i32 size = 0;
     i32 width = 0 , height = 0, channels = 0;
     auto success = ReadTextureToBuffer(path, &buffer, &size, &width, &height, &channels);
-
+    if(!success)
+    {
+        LOG_ERROR("Failed to load texture %s\n", path);
+    }
     InitFromBuffer(buffer, width, height, channels);
     name = path;
     FreeTextureBuffer(&buffer, size);
@@ -33,7 +36,13 @@ void Texture::InitFromBuffer(unsigned char* buffer, i32 width, i32 height, i32 c
 
     GLenum internalFormat = 0;
     GLenum format = 0;
-    if(channels == 3)
+
+    if(channels == 1)
+    {
+        internalFormat = GL_RED;
+        format = GL_RED;
+    }
+    else if(channels == 3)
     {
         internalFormat = GL_RGB8;
         format = GL_RGB;
@@ -50,13 +59,15 @@ void Texture::InitFromBuffer(unsigned char* buffer, i32 width, i32 height, i32 c
 }
 
 
-void Texture::Bind(i32 unit)
+void Texture::Bind(i32 _unit)
 {
+    unit = _unit;
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, id);
 }
 
 void Texture::Unbind()
 {
+    glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, 0);
 }

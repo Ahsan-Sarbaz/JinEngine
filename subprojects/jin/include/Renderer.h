@@ -8,6 +8,7 @@
 #include "ShaderProgram.h"
 #include "Model.h"
 #include "CubeMap.h"
+#include "Material.h"
 
 struct Application;
 
@@ -58,27 +59,28 @@ struct BatchRendererData
 
 struct ThreeDRendererData
 {
-    ShaderProgram* shader;
-    ShaderProgram* skyboxShader;
-
     VAO* cubeVao;
     VBO* cubeVbo;
     IBO* cubeIbo;
 
-    ShaderProgram* userShader;
+    Material* defaultMat;
+    Material* skyboxMat;
 };
 
 class Renderer
 {
+private:
+    static Renderer* s_renderer;
     RendererConfiguration config;
     BatchRendererData* batchData;
     BatchRendererStats* batchStats;
     ThreeDRendererData* rendererData;
 
-    public:
+public:
     Renderer() = default;
     ~Renderer();
     Renderer(const RendererConfiguration& config);
+    inline static Renderer* GetInstance() { return s_renderer; }
     void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
     void DrawTexturedQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, float tiling_factor = 1.0f, const glm::vec4& color = {1.0f,1.0f,1.0f,1.0f});
     void DrawTexturedRectQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, const RectF& rect, float tiling_factor = 1.0f, const glm::vec4& color = {1.0f,1.0f,1.0f,1.0f});
@@ -90,14 +92,15 @@ class Renderer
     
     
     // 3D renderer
-    void DrawModel(Model* model);
-    void DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale);
+    void DrawModel(Model* model, Material* material = GetDefaultMaterial());
+    void DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* mat = GetDefaultMaterial());
     void DrawSkybox(CubeMap* map);
     inline RendererConfiguration* GetConfig() { return &config; }
     inline BatchRendererData* GetBatchData() { return batchData; }
     inline BatchRendererStats* GetBatchStats() { return batchStats; }
-    inline ThreeDRendererData* Get3DData() { return rendererData; }
-    inline void SetShader(ShaderProgram* program) { rendererData->userShader = program; }
+    inline ThreeDRendererData* GetRendererData() { return rendererData; }
+    static inline Material* GetDefaultMaterial() { return s_renderer->GetRendererData()->defaultMat; }
+  
     private:
     
     void AddQuadToBuffer(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const frect& rect, float texture_id, float tiling_factor);

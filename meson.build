@@ -1,6 +1,6 @@
-project('sokuban', 'cpp',
+project('JinEditor', 'cpp',
     version: '0.1',
-    default_options: ['cpp_std=c++17']
+    default_options: ['cpp_std=c++20']
 )
 
 jin = subproject('jin')
@@ -11,17 +11,10 @@ imgui_dep = imgui.get_variable('imgui_dep')
 
 assimp_dep = dependency('assimp')
 
+jin_editor_src = []
+jin_editor_src += 'src/main.cpp'
+jin_editor_src += 'src/MainLayer.cpp'
 
-sokubak_src = []
-sokubak_src += 'src/main.cpp'
-sokubak_src += 'src/MainLayer.cpp'
-sokubak_src += 'src/ImGUILayer.cpp'
+jin_editor_inc_dir = include_directories(['include'])
 
-sokuban_inc_dir = include_directories(['include'])
-
-args = []
-args+='-g'
-args+='-Og'
-args+='-Wno-everything'
-
-executable('sokuban', sokubak_src, include_directories: sokuban_inc_dir, dependencies: [imgui_dep, jin_dep, assimp_dep], cpp_args: args)
+executable('JinEditor', jin_editor_src, include_directories: jin_editor_inc_dir, dependencies: [imgui_dep, jin_dep, assimp_dep])

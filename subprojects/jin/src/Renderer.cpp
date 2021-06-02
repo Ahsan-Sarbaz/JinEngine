@@ -6,8 +6,11 @@
 
 #include <GL/glew.h>
 
+Renderer* Renderer::s_renderer;
+
 Renderer::Renderer(const RendererConfiguration& _config)
 {
+    s_renderer = this;
     config = _config;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -177,6 +180,8 @@ Renderer::Renderer(const RendererConfiguration& _config)
     char* v_source = R"(
     #version 330 core
     layout(location=0) in vec3 pos;
+    layout(location=1) in vec3 norm;
+
     layout (std140) uniform Camera
     {
        mat4 projection;
@@ -186,7 +191,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
     out vec3 v_color;
     void main() 
     {
-        v_color = pos;
+        v_color = norm;
         gl_Position = cam.projection * cam.view * vec4(pos, 1);
     })";
     char* f_source = R"(
@@ -198,8 +203,8 @@ Renderer::Renderer(const RendererConfiguration& _config)
        final_color = vec4(v_color, 1);
     })";
 
-    rendererData->shader = new ShaderProgram();
-    rendererData->shader->InitFromVFShaderSources(v_source, f_source);
+    rendererData->defaultMat = new Material(new ShaderProgram());
+    rendererData->defaultMat->GetProgram()->InitFromVFShaderSources(v_source, f_source);
 
     char* skybox_v_source = R"(
     #version 330 core
@@ -209,7 +214,9 @@ Renderer::Renderer(const RendererConfiguration& _config)
     {
        mat4 projection;
        mat4 view;
+       vec3 position;
     } cam;
+
     out vec3 v_textureDir;
 
     void main() 
@@ -230,12 +237,14 @@ Renderer::Renderer(const RendererConfiguration& _config)
        final_color = texture(skyBox,v_textureDir);
     })";
 
-    rendererData->skyboxShader = new ShaderProgram();
-    rendererData->skyboxShader->InitFromVFShaderSources(skybox_v_source, skybox_f_source);
+
+    rendererData->skyboxMat = new Material(new ShaderProgram());
+    rendererData->skyboxMat->GetProgram()->InitFromVFShaderSources(skybox_v_source, skybox_f_source);
 
 
-    u32 cameraUniformBlockIndex = glGetUniformBlockIndex(rendererData->shader->GetId(), "Camera");
-    glUniformBlockBinding(rendererData->shader->GetId(), cameraUniformBlockIndex, 0);
+    u32 cameraUniformBlockIndex = glGetUniformBlockIndex(rendererData->defaultMat->GetProgram()->GetId(), "Camera");
+    glUniformBlockBinding(rendererData->defaultMat->GetProgram()->GetId(), cameraUniformBlockIndex, 0);
+
 
     float cubeVerts[] = {
         // top (+z)
@@ -334,8 +343,10 @@ Renderer::~Renderer()
     delete batchData->textures[0];
     delete batchData;
 
-    delete rendererData->shader;
-    delete rendererData->skyboxShader;
+    delete rendererData->defaultMat->GetProgram();
+    delete rendererData->defaultMat;
+    delete rendererData->skyboxMat->GetProgram();
+    delete rendererData->skyboxMat;
 
     delete rendererData->cubeVao;
     delete rendererData->cubeVbo;
@@ -461,11 +472,6 @@ void Renderer::UploadCurrentBatch()
 
 void Renderer::DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count)
 {
-    if(rendererData->userShader != nullptr)
-    {
-        rendererData->userShader->Bind();
-        rendererData->userShader = nullptr;
-    }
     vao->Bind();
     glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0);
     vao->Unbind();
@@ -473,25 +479,29 @@ void Renderer::DrawVertexArrayObject(VertexArrayObject* vao, u32 index_count)
 
 void Renderer::DrawCurrentBatch()
 {
-    UploadCurrentBatch();
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 proj = glm::ortho(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
-
-    batchData->batchShader->Bind();
-    batchData->batchShader->SetUniformMatrix4("u_model", model);
-    batchData->batchShader->SetUniformMatrix4("u_view", view);
-    batchData->batchShader->SetUniformMatrix4("u_proj", proj);
-    
-    for (u32 i = 0; i < batchData->textures_count; i++)
+    if(batchData->indexCount > 0)
     {
-        batchData->textures[i]->Bind(i);
-    }
 
-    DrawVertexArrayObject(batchData->vao, batchData->indexCount);
-    batchData->batchShader->Unbind();
-    batchData->indexCount = 0;
-    batchStats->draw_count++;
+        UploadCurrentBatch();
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 proj = glm::ortho(0.0f, (float)config.app->GetWindow()->GetConfig()->width, (float)config.app->GetWindow()->GetConfig()->height, 0.0f, 0.0f, 1.0f);
+
+        batchData->batchShader->Bind();
+        batchData->batchShader->SetUniformMatrix4("u_model", model);
+        batchData->batchShader->SetUniformMatrix4("u_view", view);
+        batchData->batchShader->SetUniformMatrix4("u_proj", proj);
+        
+        for (u32 i = 0; i < batchData->textures_count; i++)
+        {
+            batchData->textures[i]->Bind(i);
+        }
+
+        DrawVertexArrayObject(batchData->vao, batchData->indexCount);
+        batchData->batchShader->Unbind();
+        batchData->indexCount = 0;
+        batchStats->draw_count++;
+    }
 }
 
 void Renderer::ResetRendererStats()
@@ -502,23 +512,21 @@ void Renderer::ResetRendererStats()
     batchStats->quad_count = 0;
 }
 
-
-void Renderer::DrawModel(Model* model)
+void Renderer::DrawModel(Model* model, Material* material)
 {
     for (u32 i = 0; i < model->GetMeshCount(); i++)
     {
-        rendererData->shader->Bind();
-        // rendererData->shader->SetUniformMatrix4("u_model", modelmat);        
+        material->GetProgram()->Bind();
         DrawVertexArrayObject(model->GetVAO(i), model->GetIBO(i)->GetCount());
-        rendererData->shader->Unbind();
+        material->GetProgram()->Unbind();
     }   
 }
 
-void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
+void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* mat)
 {
-    rendererData->shader->Bind();
+    mat->GetProgram()->Bind();
     DrawVertexArrayObject(rendererData->cubeVao, rendererData->cubeIbo->GetCount());
-    rendererData->shader->Unbind();
+    mat->GetProgram()->Unbind();
 }
 
 void Renderer::DrawSkybox(CubeMap* map)
@@ -526,12 +534,11 @@ void Renderer::DrawSkybox(CubeMap* map)
     glCullFace(GL_FRONT);
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
-    rendererData->skyboxShader->Bind();
+    rendererData->skyboxMat->GetProgram()->Bind();
     map->Bind();
-    SetShader(rendererData->skyboxShader);
-    DrawCube({}, {}, {});
+    DrawCube({}, {}, {}, rendererData->skyboxMat);
     map->Unbind();
-    rendererData->skyboxShader->Unbind();
+    rendererData->skyboxMat->GetProgram()->Unbind();
     glCullFace(GL_BACK);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);

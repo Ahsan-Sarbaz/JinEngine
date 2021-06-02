@@ -5,6 +5,7 @@ class Texture
 {
 private:
     u32 id;
+    i32 unit;
     i32 width, height, channels;
     const char* name;
 

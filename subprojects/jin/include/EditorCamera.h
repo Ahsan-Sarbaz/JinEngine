@@ -29,13 +29,20 @@ public:
     EditorCamera();
     void ProcessKeyboard(CameraMovment direction);
     void ProcessMouseMove(float xoffset, float yoffset, bool  constrainPitch = true);
+
     glm::mat4 GetViewMatrix();
     glm::mat4 GetProjectionMatrix(float width, float height);
     inline glm::vec3 GetPosition() { return position; }
     inline glm::vec3 GetFront() { return front; }
     inline float GetZoom() { return zoom; }
+    inline float GetMovementSpeed() { return movementSpeed; }
+    inline float GetMouseSensitivity() { return mouseSensitivity; }
 
+    inline void SetPosition(const glm::vec3& pos) { position = pos; }
+    inline void SetZoom(float _zoom) { zoom = _zoom; }
+    inline void SetMovementSpeed(float speed) { movementSpeed = speed; }
+    inline void SetMouseSensitivity(float sensitivity) { mouseSensitivity = sensitivity; }
 
-private:
+  private:
     void Update();
 };

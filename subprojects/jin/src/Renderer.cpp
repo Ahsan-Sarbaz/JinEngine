@@ -330,6 +330,10 @@ Renderer::Renderer(const RendererConfiguration& _config)
     rendererData->cubeIbo->SetData(sizeof(cubeIndices), cubeIndices);
     rendererData->cubeIbo->SetCount(sizeof(cubeIndices) / sizeof(u32));
     rendererData->cubeVao->PushIndexBuffer(rendererData->cubeIbo);
+
+    rendererData->cameraUBO = new UniformBufferObject(UNIFORM_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
+    rendererData->cameraUBO->SetBindingIndex(0);
+    rendererData->cameraUBO->SetData(sizeof(CameraUBOLayout), nullptr);
 }   
 
 Renderer::~Renderer()
@@ -544,4 +548,9 @@ void Renderer::DrawSkybox(CubeMap* map)
     glCullFace(GL_BACK);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
+}
+
+void Renderer::SetCameraUBOData(CameraUBOLayout data)
+{
+    s_renderer->rendererData->cameraUBO->SetSubData(0, sizeof(CameraUBOLayout), &data);
 }

@@ -7,7 +7,8 @@ private:
     Model* model;
     CubeMap* skyMap;
     Level* level;
-
+    EditorCamera* camera;
+    Entity* selectedEntity;
 public:
     MainLayer();
     virtual void OnStart() override;
@@ -17,4 +18,5 @@ public:
 private:
   void ImGuiDrawLevelPanel();
   void ImGuiDrawEntity(Entity* entity);
+  void ImGuiDrawComponentsPanel();
 };

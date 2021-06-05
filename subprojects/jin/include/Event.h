@@ -62,10 +62,11 @@ struct Event
     u32 type;
 };
 
-typedef void(*PFNEVENTCALLBACK)(Event e);
+typedef void(*PFNEVENTCALLBACK)(void* object, Event e);
 
 struct EventListener
 {
     u32 type;
     PFNEVENTCALLBACK callback;
+    void* object;
 };

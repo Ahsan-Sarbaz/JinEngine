@@ -9,6 +9,7 @@
 #include "Model.h"
 #include "CubeMap.h"
 #include "Material.h"
+#include "UniformBufferObject.h"
 
 struct Application;
 
@@ -65,10 +66,22 @@ struct ThreeDRendererData
 
     Material* defaultMat;
     Material* skyboxMat;
+
+
+
+    UniformBufferObject* cameraUBO;
 };
 
 class Renderer
 {
+public:
+    struct CameraUBOLayout
+    {
+        glm::mat4 projection;
+        glm::mat4 view;
+        glm::vec3 position;
+    };
+
 private:
     static Renderer* s_renderer;
     RendererConfiguration config;
@@ -100,7 +113,7 @@ public:
     inline BatchRendererStats* GetBatchStats() { return batchStats; }
     inline ThreeDRendererData* GetRendererData() { return rendererData; }
     static inline Material* GetDefaultMaterial() { return s_renderer->GetRendererData()->defaultMat; }
-  
+    static void SetCameraUBOData(CameraUBOLayout data);
     private:
     
     void AddQuadToBuffer(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, const frect& rect, float texture_id, float tiling_factor);

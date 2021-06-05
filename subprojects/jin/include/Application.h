@@ -24,66 +24,70 @@ struct ApplicationConfiguration
 class Application
 {
   private:
-    static Application *s_app;
+    static Application* s_app;
     ApplicationConfiguration config;
-    Window *window;
-    std::vector<Layer *> layers;
-    Renderer *renderer;
+    Window* window;
+    std::vector<Layer*> layers;
+    Renderer* renderer;
     std::vector<Event> events;
     std::vector<EventListener> event_listners;
-    EditorCamera *editorCam;
-    UniformBufferObject *cameraUBO;
     Level* currentLevel;
     Framebuffer* renderTarget;
 
   public:
-    Application() = default;
     Application(const ApplicationConfiguration &config);
     ~Application();
+
+    void Run();
+    void AttachLayer(Layer* layer);
 
     inline static Application *GetInstance()
     {
         return s_app;
     }
 
-    void Run();
-    void AttachLayer(Layer *layer);
-    void AddEvent(Event e);
-    void AddEventListener(EventListener listener);
-
-    inline ApplicationConfiguration *GetConfig()
+    inline static void AddEvent(Event e)
     {
-        return &config;
-    }
-    inline Window *GetWindow()
-    {
-        return window;
-    }
-    inline u32 GetLayerCount()
-    {
-        return layers.size();
-    }
-    inline Renderer *GetRenderer()
-    {
-        return renderer;
-    }
-    inline EditorCamera *GetEditorCamera()
-    {
-        return editorCam;
+        s_app->events.push_back(e);
     }
 
-    inline void SetCurrentLevel(Level* level)
+    inline static void AddEventListener(EventListener listener)
     {
-        currentLevel = level;
+        s_app->event_listners.push_back(listener);
     }
 
-    inline Level* GetCurrentLevel()
+    inline static ApplicationConfiguration *GetConfig()
     {
-        return currentLevel;
+        return &s_app->config;
     }
 
-    inline Framebuffer* GetRenderTarget()
+    inline static Window *GetWindow()
     {
-        return renderTarget;
+        return s_app->window;
+    }
+
+    inline static u32 GetLayerCount()
+    {
+        return s_app->layers.size();
+    }
+
+    inline static Renderer *GetRenderer()
+    {
+        return s_app->renderer;
+    }
+
+    inline static void SetCurrentLevel(Level* level)
+    {
+        s_app->currentLevel = level;
+    }
+
+    inline static Level* GetCurrentLevel()
+    {
+        return s_app->currentLevel;
+    }
+
+    inline static Framebuffer* GetRenderTarget()
+    {
+        return s_app->renderTarget;
     }
 };

@@ -72,6 +72,11 @@ class Entity
         return *comp;
     }
 
+    inline void ClearAllChilds()
+    {
+        children.clear();
+    }
+
 private:
     inline Entity* AddChild(Entity *entity)
     {
@@ -80,6 +85,13 @@ private:
     }
     inline void RemoveChild(Entity *entity)
     {
+        level->registry.destroy(entity->GetHandle());
+        for(u32 i = 0; i < entity->GetChildCount(); ++i)
+        {
+            entity->RemoveChild(entity->GetChild(i));
+        }
+        entity->ClearAllChilds();
+
         children.remove(entity);
     }
 

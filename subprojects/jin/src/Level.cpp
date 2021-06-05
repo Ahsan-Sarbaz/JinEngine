@@ -17,12 +17,16 @@ Entity* Level::CreateEntity(const char *name)
 
 void Level::RemoveEntity(Entity *e)
 {
-    registry.destroy(e->GetHandle());
-    root->RemoveChild(e);
+    if(e->GetParent() != nullptr)
+    {
+        e->GetParent()->RemoveChild(e);
+        //registry.destroy(e->GetHandle());
+    }
 }
 
 Entity* Level::AddChild(Entity *parent, const char* name)
 {
+    if(parent == nullptr) parent = root;
     auto child = parent->AddChild(new Entity(registry.create(), this));
     child->AddComponent<TagComponent>(name);
     child->AddComponent<TransformComponent>();

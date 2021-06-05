@@ -165,68 +165,6 @@ Application::Application(const ApplicationConfiguration& _config)
     rendererConfig.batch_renderer_max_quads = 100;
     renderer = new Renderer(rendererConfig);
 
-    editorCam = new EditorCamera();
-    // editorCam->SetEye(glm::vec3{0.f,0.f,1000.f});
-    EventListener editorCameraKeyboardEventListener = {};
-    editorCameraKeyboardEventListener .type = EVENT_TYPE_KEYBOARD_KEY_REPEAT | EVENT_TYPE_KEYBOARD_KEY_DOWN;
-    editorCameraKeyboardEventListener .callback = [](Event e){
-        float last_speed = Application::GetInstance()->GetEditorCamera()->GetMovementSpeed();
-        switch(e.data.key_char)
-        {
-            case JIN_KEY_W:
-            case JIN_KEY_UP:
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
-                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_FORWARD);
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
-            break;
-            case JIN_KEY_S:
-            case JIN_KEY_DOWN:
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
-                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_BACKWARD);
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
-            break;
-            case JIN_KEY_A:
-            case JIN_KEY_LEFT:
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
-                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_LEFT);
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
-            break;
-            case JIN_KEY_D:
-            case JIN_KEY_RIGHT:
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(10.0f);
-                Application::GetInstance()->GetEditorCamera()->ProcessKeyboard(CAMERA_MOVEMENT_RIGHT);
-                if(e.data.key_mods == JIN_MOD_SHIFT) Application::GetInstance()->GetEditorCamera()->SetMovementSpeed(last_speed);
-            break;
-        }
-    };
-    AddEventListener(editorCameraKeyboardEventListener);
-    EventListener editorCameraMouseEventListener = {};
-    editorCameraMouseEventListener.type = EVENT_TYPE_MOUSE_MOVE;
-    editorCameraMouseEventListener.callback = [](Event e)
-    {
-        static bool firstMouse = true; 
-        static float lastX = 0;
-        static float lastY = 0;
-        if ( firstMouse )
-        {
-            lastX = e.data.x;
-            lastY = e.data.y;
-            firstMouse = false;
-        }
-
-        float xOffset = e.data.x - lastX;
-        float yOffset = lastY - e.data.y;  // Reversed since y-coordinates go from bottom to left
-
-        lastX = e.data.x;
-        lastY = e.data.y;
-        Application::GetInstance()->GetEditorCamera()->ProcessMouseMove(xOffset, yOffset);
-    };
-    AddEventListener(editorCameraMouseEventListener);
-
-    cameraUBO = new UniformBufferObject(UNIFORM_BUFFER_OBJECT_TYPE_DYNAMIC_DRAW);
-    cameraUBO->SetBindingIndex(0);
-    cameraUBO->SetData(sizeof(glm::mat4) * 2 + sizeof(glm::vec3), nullptr);
-
     FramebufferConfiguration framebufferConfig = {};
     framebufferConfig.width = config.windowConfig.width;
     framebufferConfig.height= config.windowConfig.height;
@@ -241,17 +179,17 @@ Application::Application(const ApplicationConfiguration& _config)
     }
 
     EventListener renderTargetResizeEventListener = {};
+    renderTargetResizeEventListener.object = renderTarget;
     renderTargetResizeEventListener.type = EVENT_TYPE_FRAME_BUFFER_RESIZE;
-    renderTargetResizeEventListener.callback = [](Event e) {
-        Application::GetInstance()->GetRenderTarget()->Invalidate();
+    renderTargetResizeEventListener.callback = [](void* object, Event e) {
+        auto renderTarget = (Framebuffer*)object;
+        renderTarget->Invalidate();
     };
 }
 
 Application::~Application()
 {
     delete renderTarget;
-    delete cameraUBO;
-    delete editorCam;
     delete renderer;
     glfwDestroyWindow(window->GetHandle());
     delete window;
@@ -283,7 +221,7 @@ void  Application::Run()
             {
                 if(listner.type & event.type)
                 {
-                    listner.callback(event);
+                    listner.callback(listner.object, event);
                 }
             }
         }    
@@ -302,18 +240,7 @@ void  Application::Run()
         {
             glfwSetWindowShouldClose(window->GetHandle(), 1);
         }
-    
-        struct CameraUBOLayout
-        {
-            glm::mat4 projection;
-            glm::mat4 view;
-            glm::vec3 position;
-        } cameraUBOData = {
-            editorCam->GetProjectionMatrix((float)renderTarget->GetConfig()->width, (float)renderTarget->GetConfig()->height), editorCam->GetViewMatrix(), editorCam->GetPosition()
-        };
-        
-        cameraUBO->SetSubData(0, sizeof(cameraUBOData), &cameraUBOData);
-        
+
         if(config.enable_imgui)
         {
             ImGui_ImplOpenGL3_NewFrame();
@@ -425,15 +352,5 @@ void Application::AttachLayer(Layer* layer)
         LOG_ERROR("You are trying to attach a null Layer!\n");
         return;
     }
-    layers.push_back(layer);
-}
-
-void Application::AddEvent(Event e)
-{
-    events.push_back(e);
-}
-
-void Application::AddEventListener(EventListener listener)
-{
-    event_listners.push_back(listener);
+    s_app->layers.push_back(layer);
 }

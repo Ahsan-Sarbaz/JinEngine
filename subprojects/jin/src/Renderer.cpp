@@ -187,12 +187,12 @@ Renderer::Renderer(const RendererConfiguration& _config)
        mat4 projection;
        mat4 view;
     } cam;
-    // "uniform mat4 u_model;
+    uniform mat4 u_model;
     out vec3 v_color;
     void main() 
     {
         v_color = norm;
-        gl_Position = cam.projection * cam.view * vec4(pos, 1);
+        gl_Position = cam.projection * cam.view * u_model * vec4(pos, 1);
     })";
     char* f_source = R"(
     #version 330 core
@@ -441,12 +441,12 @@ void Renderer::AddTexturedQuadToBuffer(const glm::vec2& position, const glm::vec
 
 void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
 {
-    AddTexturedQuadToBuffer(position, size, nullptr, {0,0,1,1}, 1, color);
+    AddTexturedQuadToBuffer(position, size, nullptr, {0.0f, 0.0f,1.0f,1.0f}, 1, color);
 }
 
 void Renderer::DrawTexturedQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, float tiling_factor, const glm::vec4& color)
 {
-    AddTexturedQuadToBuffer(position, {size.x  == 0 ? texture->GetWidth() : size.x , size.y  == 0 ? texture->GetHeight() : size.y} , texture, {0,0,1,1}, tiling_factor, color);
+    AddTexturedQuadToBuffer(position, {size.x  == 0 ? texture->GetWidth() : size.x , size.y  == 0 ? texture->GetHeight() : size.y} , texture, {0.0f,0.0f,1.0f,1.0f}, tiling_factor, color);
 }
 
 void Renderer::DrawTexturedRectQuad(const glm::vec2& position, const glm::vec2& size, Texture* texture, const RectF& rect, float tiling_factor, const glm::vec4& color)
@@ -516,10 +516,11 @@ void Renderer::ResetRendererStats()
     batchStats->quad_count = 0;
 }
 
-void Renderer::DrawModel(Model* model, Material* material)
+void Renderer::DrawModel(Model* model, const glm::mat4& model_matrix, Material* material)
 {
     if(material == nullptr) material = rendererData->defaultMat;
     material->GetProgram()->Bind();
+    material->GetProgram()->SetUniformMatrix4("u_model", model_matrix);
     for (u32 i = 0; i < model->GetMeshCount(); i++)
     {
         DrawVertexArrayObject(model->GetVAO(i), model->GetIBO(i)->GetCount());

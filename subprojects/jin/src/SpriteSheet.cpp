@@ -19,12 +19,12 @@ SpriteSheet::SpriteSheet(const SpriteSheetConfiguration& _config)
     {
         for (u32 y = 0; y < sprites_per_column; y++)
         {
-            auto rect = RectF{ 
+            auto rect = RectF{
                 (float) x * tw,
 				(float) y * th,
 				((float)x * tw) + tw,
-				((float)y * th) + th
-			};
+                ((float)y * th) + th
+            };
 
             // if(y * spriteSheet->sprites_per_row + x > spriteSheet->sprites_count)
             //     LOG_TRACE("We got a problem\n");

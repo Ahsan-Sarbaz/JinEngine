@@ -77,6 +77,13 @@ class Entity
         children.clear();
     }
 
+    template<typename T>
+    b8 HasComponent()
+    {
+        auto component = level->registry.try_get<T>(handle);
+        return component == nullptr ? FALSE : TRUE;
+    }
+
 private:
     inline Entity* AddChild(Entity *entity)
     {
@@ -97,5 +104,3 @@ private:
 
     friend class Level;
 };
-
-entt::registry &&GetEnTTRegistry();

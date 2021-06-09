@@ -1,7 +1,7 @@
 #pragma once
 #include "Types.h"
 
-struct Application;
+class Application;
 
 class Layer
 {

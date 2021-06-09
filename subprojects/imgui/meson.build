@@ -4,7 +4,7 @@ project('imgui', 'cpp',
 )
 
 include_dirs = include_directories('.', 'backends')
-sources = ['imgui_demo.cpp', 'imgui_draw.cpp', 'imgui_tables.cpp', 'imgui_widgets.cpp', 'imgui.cpp']
+sources = ['imgui_demo.cpp', 'imgui_draw.cpp', 'imgui_tables.cpp', 'imgui_widgets.cpp', 'imgui.cpp', 'imguizmo.cpp']
 sources += 'backends/imgui_impl_opengl3.cpp'
 sources += 'backends/imgui_impl_glfw.cpp'
 

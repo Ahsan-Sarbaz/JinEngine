@@ -16,6 +16,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "imguizmo.h"
 
 Application* Application::s_app;
 
@@ -214,17 +215,20 @@ void  Application::Run()
     while (!glfwWindowShouldClose(window->GetHandle()))
     {
         glfwPollEvents();
-    
-        for (auto &&listner : event_listners)
+
+        if(!blockEvents)
         {
-            for (auto &&event : events)
+            for (auto &&listner : event_listners)
             {
-                if(listner.type & event.type)
+                for (auto &&event : events)
                 {
-                    listner.callback(listner.object, event);
+                    if(listner.type & event.type)
+                    {
+                        listner.callback(listner.object, event);
+                    }
                 }
             }
-        }    
+        }
 
         events.clear();
 
@@ -250,6 +254,8 @@ void  Application::Run()
             {
                 ImGui::DockSpaceOverViewport();
             }
+
+            ImGuizmo::BeginFrame();
         }
 
         for (int i = layers.size() - 1; i >= 0; i--)
@@ -268,8 +274,11 @@ void  Application::Run()
             for(auto& entity : currentLevel->registry.view<ModelComponent>())
             {
                 auto materialComp = currentLevel->registry.try_get<MaterialComponent>(entity);
+                auto& tranfrom = currentLevel->registry.get<TransformComponent>(entity);
                 auto& modelComp = currentLevel->registry.get<ModelComponent>(entity);
-                renderer->DrawModel(modelComp.model, materialComp ? materialComp->material : nullptr);
+                // TODO: move this to a transform thing
+                glm::mat4 model_matrix = tranfrom.GetTransform();
+                renderer->DrawModel(modelComp.model, model_matrix, materialComp ? materialComp->material : nullptr);
             }
 
             renderer->StartNewBatch();

@@ -4,11 +4,12 @@
 #include "SpriteSheetAnimation.h"
 #include "Model.h"
 #include "Material.h"
+#include <string>
 
 struct TagComponent
 {
-    const char* name;
-    TagComponent(const char* _name)
+    std::string name;
+    TagComponent(std::string _name)
         :name(_name)
     {
 
@@ -25,6 +26,12 @@ struct TransformComponent
         :position(_position), rotation(_rotation), scale(_scale)
     {
 
+    }
+
+    glm::mat4 GetTransform()
+    {
+        glm::mat4 r = glm::toMat4(glm::quat(rotation));
+        return glm::translate(glm::mat4(1.0f), position) * r * glm::scale(glm::mat4(1.0f), scale);
     }
 };
 

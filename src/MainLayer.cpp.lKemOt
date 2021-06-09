@@ -74,29 +74,35 @@ MainLayer::MainLayer()
     mainLayerKeyboardEventsListener.object = this;
     mainLayerKeyboardEventsListener.callback = [](void* object, Event e) {
         auto mainLayer = (MainLayer*)object;
+        ImGuizmo::OPERATION op;
+        // Gizmos
         switch (e.data.key_char) {
-        case JIN_KEY_1:
-            mainLayer->SetGuizmoType(-1);
-            break;
-        case JIN_KEY_2:
-            mainLayer->SetGuizmoType(ImGuizmo::TRANSLATE);
-            break;
-        case JIN_KEY_3:
-            mainLayer->SetGuizmoType(ImGuizmo::ROTATE);
-            break;
-        case JIN_KEY_4:
-            mainLayer->SetGuizmoType(ImGuizmo::SCALE);
+        case JIN_KEY_Q: {
+            op = -1;
             break;
         }
-    };
+        case JIN_KEY_W: {
+            op = ImGuizmo::OPERATION::TRANSLATE;
+            break;
+        }
+        case "E" {
+                op = ImGuizmo::OPERATION::ROTATE;
+            break;
+        }
+        case "R" {
+                op = ImGuizmo::OPERATION::SCALE;
+            break;
+        }
+        }
 
-    Application::AddEventListener(mainLayerKeyboardEventsListener);
+        mainLayer->SetGuizmoType();
+    };
 }
 
 void MainLayer::OnStart()
 {  
-     model = new Model("res/models/Car.dae");
-//     model = new Model(Mesh::CreateCubeMesh());
+    // model = new Model("res/models/bunny.fbx");
+     model = new Model(Mesh::CreateCubeMesh());
 
     const char* skyPaths[6] = {
         "res/textures/sky/posx.jpg",
@@ -128,6 +134,10 @@ void MainLayer::OnUpdate()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("ViewPort", 0);
 
+    auto hovered = ImGui::IsWindowHovered();
+    auto focused = ImGui::IsWindowFocused();
+    Application::BlockEvents(!hovered && !focused);
+
     static ImVec2 lastAvail = ImVec2{0,0};
     auto avail = ImGui::GetContentRegionAvail();
     if(avail.x != lastAvail.x || avail.y != lastAvail.y)
@@ -136,62 +146,38 @@ void MainLayer::OnUpdate()
         lastAvail = avail;
     }
 
-    auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-    auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-    auto viewportOffset = ImGui::GetWindowPos();
-    auto m_ViewportBounds1 = ImVec2{ viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-    auto m_ViewportBounds2 = ImVec2{ viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
-
     Renderer::CameraUBOLayout cameraUboLayout = {};
     cameraUboLayout.projection = camera->GetProjectionMatrix((float)avail.x, (float)avail.y);
     cameraUboLayout.view = camera->GetViewMatrix();
     cameraUboLayout.position = camera->GetPosition();
-
-
-    ImGui::Image((ImTextureID)(u64)Application::GetInstance()->GetRenderTarget()->GetAttachmentId(0), avail, { 0,1 }, {1,0});
-
-    ImGuizmo::SetOrthographic(false);
-    ImGuizmo::SetDrawlist();
-    ImGuizmo::SetRect(m_ViewportBounds1.x, m_ViewportBounds1.y, m_ViewportBounds2.x - m_ViewportBounds1.x, m_ViewportBounds2.y - m_ViewportBounds1.y);
-    ImGuizmo::Enable(false);
-    ImGuizmo::ViewManipulate(glm::value_ptr(cameraUboLayout.view), cameraUboLayout.position.z, {viewportOffset.x + viewportMaxRegion.x - 128 + 5, viewportOffset.y + 5}, {128, 128}, 0x10101010);
-
     Renderer::SetCameraUBOData(cameraUboLayout);
 
-    if (selectedEntity && guizmoType != -1 && selectedEntity != lvl->GetRootEntity())
-    {
-        ImGuizmo::Enable(true);
+    ImGui::Image((ImTextureID)(u64)Application::GetInstance()->GetRenderTarget()->GetAttachmentId(0), avail, { 0,1 }, {1,0});
+    ImGui::End();
+    ImGui::PopStyleVar();
 
+    if(selectedEntity && selectedEntity != lvl->GetRootEntity())
+    {
         auto& tc = selectedEntity->GetComponent<TransformComponent>();
         glm::mat4 transform = tc.GetTransform();
 
-        // Snapping
-        bool snap = false;//ImGui::IsKeyPressed(ImGuiKeyModFlags_Ctrl);
-        float snapValue = 0.5f; // Snap to 0.5m for translation/scale
-        // Snap to 45 degrees for rotation
-        if (guizmoType == ImGuizmo::OPERATION::ROTATE)
-            snapValue = 45.0f;
-
-        float snapValues[3] = { snapValue, snapValue, snapValue };
-
+        ImGuizmo::SetOrthographic(false);
+//        ImGuizmo::SetRect()
         ImGuizmo::Manipulate(glm::value_ptr(cameraUboLayout.view), glm::value_ptr(cameraUboLayout.projection),
-                             (ImGuizmo::OPERATION)guizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
-                         nullptr, snap ? snapValues : nullptr);
+                             (ImGuizmo::OPERATION)gizmoType, ImGuizmo::LOCAL,
+                             glm::value_ptr(transform), nullptr, nullptr);
 
-        guizmoUsed = ImGuizmo::IsUsing();
-        if (guizmoUsed)
+        if (ImGuizmo::IsUsing())
         {
             glm::vec3 translation, rotation, scale;
             ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
 
+            glm::vec3 deltaRotation = rotation - tc.rotation;
             tc.position = translation;
-            tc.rotation = glm::radians(rotation);
+            tc.rotation += deltaRotation;
             tc.scale = scale;
         }
     }
-
-    ImGui::End();
-    ImGui::PopStyleVar();
 
 }
 

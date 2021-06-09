@@ -10,7 +10,7 @@
 #include <vector>
 
 
-struct Renderer;
+class Renderer;
 
 struct ApplicationConfiguration
 {
@@ -33,7 +33,7 @@ class Application
     std::vector<EventListener> event_listners;
     Level* currentLevel;
     Framebuffer* renderTarget;
-
+    b8 blockEvents;
   public:
     Application(const ApplicationConfiguration &config);
     ~Application();
@@ -89,5 +89,10 @@ class Application
     inline static Framebuffer* GetRenderTarget()
     {
         return s_app->renderTarget;
+    }
+
+    inline static void BlockEvents(b8 status)
+    {
+        s_app->blockEvents = status;
     }
 };

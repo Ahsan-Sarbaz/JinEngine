@@ -11,7 +11,7 @@
 #include "Material.h"
 #include "UniformBufferObject.h"
 
-struct Application;
+class Application;
 
 struct RendererConfiguration
 {
@@ -104,7 +104,7 @@ public:
     void ResetRendererStats();
     
     // 3D renderer
-    void DrawModel(Model* model, Material* material = nullptr);
+    void DrawModel(Model* model, const glm::mat4& model_matrix, Material* material = nullptr);
     void DrawCube(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Material* material = nullptr);
     void DrawSkybox(CubeMap* map);
 

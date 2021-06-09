@@ -1,8 +1,8 @@
 #pragma once
 #include "Types.h"
 
-struct VertexBufferObject;
-struct IndexBufferObject;
+class VertexBufferObject;
+class IndexBufferObject;
 
 
 class VertexArrayObject

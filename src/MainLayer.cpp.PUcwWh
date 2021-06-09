@@ -1,4 +1,4 @@
-#include "MainLayer.h"
+r#include "MainLayer.h"
 #include "Jin.h"
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -64,7 +64,7 @@ MainLayer::MainLayer()
 
         lastX = e.data.x;
         lastY = e.data.y;
-        camera->ProcessMouseMove(xOffset, yOffset);
+//        camera->ProcessMouseMove(xOffset, yOffset);
     };
 
     Application::AddEventListener(editorCameraMouseEventListener);
@@ -95,8 +95,8 @@ MainLayer::MainLayer()
 
 void MainLayer::OnStart()
 {  
-     model = new Model("res/models/Car.dae");
-//     model = new Model(Mesh::CreateCubeMesh());
+    // model = new Model("res/models/bunny.fbx");
+     model = new Model(Mesh::CreateCubeMesh());
 
     const char* skyPaths[6] = {
         "res/textures/sky/posx.jpg",

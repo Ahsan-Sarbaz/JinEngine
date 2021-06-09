@@ -3,12 +3,8 @@
 #include "Application.h"
 
 EditorCamera::EditorCamera()
-    :position({0.0f, 0.0f,0.0f}),up({0.0f, 1.0f,0.0f}),worldUp(up),front({0.0f, 0.0f,-1.0f}), movementSpeed(1.0f), yaw(-90.0f), pitch(0.0f),mouseSensitivity(0.25f), zoom(40.0f)
+    :position({0.0f, 0.0f,0.0f}), front({0.0f, 0.0f,-1.0f}), up({0.0f, 1.0f,0.0f}), worldUp(up), yaw(-90.0f), pitch(0.0f), movementSpeed(1.0f), mouseSensitivity(0.25f), zoom(40.0f)
 {
-    ;
-    this->worldUp = up;
-    this->yaw = yaw;
-    this->pitch = pitch;
     Update();
 }
 

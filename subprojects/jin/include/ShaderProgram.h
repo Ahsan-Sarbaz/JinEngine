@@ -12,7 +12,7 @@ public:
     /// this will read the two files compile them and link them to a progam and delete them because they are now in gpu memory
     void InitFromVFShaderPath(const char* vpath, const char* fpath);
     /// this will create shaders from sources compile them and link them to a progam and delete them because they are now in gpu memory
-    void InitFromVFShaderSources(char* vsource, char* fsource);
+    void InitFromVFShaderSources(const char* vsource, const char* fsource);
     void AttachShader(Shader* shader);
     void DetachShader(Shader* shader);
     b8 Link();

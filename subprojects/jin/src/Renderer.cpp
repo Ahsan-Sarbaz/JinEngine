@@ -2,7 +2,7 @@
 #include "Application.h"
 #include "Logger.h"
 #include "Rect.h"
-#include "Time.h"
+#include "JinTime.h"
 
 #include <GL/glew.h>
 
@@ -75,7 +75,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
         batchData->textures[0] = new Texture();
         batchData->textures[0]->InitFromBuffer(whiteData, 1,1,4);
 
-        char* vertex_buffer_source = R"(
+        const char* vertex_buffer_source = R"(
         #version 330 core
         
         layout(location = 0) in vec2 pos;
@@ -103,7 +103,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
         }
         )";
 
-        char* fragment_buffer_source = R"(
+        const char* fragment_buffer_source = R"(
         #version 330 core
 
         out vec4 final_color;
@@ -177,7 +177,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
     }
 
     rendererData = new ThreeDRendererData();
-    char* v_source = R"(
+    const char* v_source = R"(
     #version 330 core
     layout(location=0) in vec3 pos;
     layout(location=1) in vec3 norm;
@@ -194,7 +194,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
         v_color = norm;
         gl_Position = cam.projection * cam.view * u_model * vec4(pos, 1);
     })";
-    char* f_source = R"(
+    const char* f_source = R"(
     #version 330 core
     out vec4 final_color;
     in vec3 v_color;
@@ -206,7 +206,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
     rendererData->defaultMat = new Material(new ShaderProgram());
     rendererData->defaultMat->GetProgram()->InitFromVFShaderSources(v_source, f_source);
 
-    char* skybox_v_source = R"(
+    const char* skybox_v_source = R"(
     #version 330 core
     layout(location=0) in vec3 a_Pos;
     
@@ -225,7 +225,7 @@ Renderer::Renderer(const RendererConfiguration& _config)
         gl_Position= pos.xyww;
         v_textureDir = a_Pos;
     })";
-    char* skybox_f_source = R"(
+    const char* skybox_f_source = R"(
     #version 330 core
     out vec4 final_color;
 

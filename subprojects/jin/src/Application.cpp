@@ -2,7 +2,7 @@
 
 #include "Logger.h"
 #include "Renderer.h"
-#include "Time.h"
+#include "JinTime.h"
 #include "Entity.h"
 #include "Components.h"
 #include "KeyCodes.h"
@@ -14,8 +14,8 @@
 #define ENABLE_IMGUI 1
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 #include "imguizmo.h"
 
 Application* Application::s_app;

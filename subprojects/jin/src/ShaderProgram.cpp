@@ -24,12 +24,21 @@ void ShaderProgram::InitFromVFShaderPath(const char* vpath, const char* fpath)
     delete f_shader;
 }
 
-void ShaderProgram::InitFromVFShaderSources(char* vsource, char* fsource)
+void ShaderProgram::InitFromVFShaderSources(const char* vsource, const char* fsource)
 {
     Shader* v_shader = new Shader(SHADER_TYPE_VERTEX);
     Shader* f_shader = new Shader(SHADER_TYPE_FRAGMENT);
-    v_shader->SetSource(&vsource);
-    f_shader->SetSource(&fsource);
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    auto _vsource = _strdup(vsource);
+    auto _fsource = _strdup(fsource);
+#else
+    auto _vsource = strdup(vsource);
+    auto _fsource = strdup(fsource);
+#endif
+
+    v_shader->SetSource(&_vsource);
+    f_shader->SetSource(&_fsource);
     v_shader->Compile();
     f_shader->Compile();
     id = glCreateProgram();

@@ -1,6 +1,6 @@
 #include "SpriteSheetAnimation.h"
 #include "Logger.h"
-#include "Time.h"
+#include "JinTime.h"
 
 SpriteSheetAnimation::SpriteSheetAnimation(SpriteSheet* _sprite_sheet, const SpriteSheetAnimationLayout& _layout)
 {

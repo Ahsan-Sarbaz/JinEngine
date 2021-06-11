@@ -1,5 +1,5 @@
 #include "EditorCamera.h"
-#include "Time.h"
+#include "JinTime.h"
 #include "Application.h"
 
 EditorCamera::EditorCamera()

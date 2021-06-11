@@ -20,7 +20,7 @@ CubeMap::CubeMap(const char** path)
         auto success = ReadTextureToBuffer(path[i], &buffer, &size, &width, &height, &channels);
         if(!success)
         {
-            LOG_TRACE("Failed to read file %s\n", path[i]);
+            LOG_ERROR("Failed to read file %s\n", path[i]);
             return;
         }
         GLenum internalFormat = 0;

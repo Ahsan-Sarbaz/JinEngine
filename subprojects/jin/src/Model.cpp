@@ -80,11 +80,11 @@ Model::Model(const char* path)
 
     for (u32 i = 0; i < meshes.size(); i++)
     {
-        vao[i] = new VertexArrayObject();
-        vbo_pos[i] = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
-        vbo_norm[i] = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
-        vbo_uv[i] = new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);
-        ibo[i] = new IndexBufferObject(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW);    
+        vao.push_back(new VertexArrayObject());
+        vbo_pos.push_back(new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW));
+        vbo_norm.push_back(new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW));
+        vbo_uv.push_back(new VertexBufferObject(VERTEX_BUFFER_OBJECT_TYPE_STATIC_DRAW));
+        ibo.push_back(new IndexBufferObject(INDEX_BUFFER_OBJECT_TYPE_STATIC_DRAW));
         vao[i]->Init();
 
         vbo_pos[i]->SetData(sizeof(glm::vec3) * meshes[i]->GetVerticesCount(), meshes[i]->GetVerticesData());

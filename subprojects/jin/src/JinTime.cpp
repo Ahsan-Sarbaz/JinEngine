@@ -1,4 +1,4 @@
-#include "Time.h"
+#include "JinTime.h"
 #include "Application.h"
 
 Time* jin_time;

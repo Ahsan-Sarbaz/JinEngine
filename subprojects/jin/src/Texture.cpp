@@ -33,6 +33,7 @@ void Texture::InitFromBuffer(unsigned char* buffer, i32 width, i32 height, i32 c
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     GLenum internalFormat = 0;
     GLenum format = 0;

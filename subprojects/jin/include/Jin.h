@@ -13,7 +13,7 @@
 #include "VertexBufferObject.h"
 #include "VertexArrayObject.h"
 #include "Rect.h"
-#include "Time.h"
+#include "JinTime.h"
 #include "SpriteSheetAnimation.h"
 #include "Event.h"
 #include "Components.h"

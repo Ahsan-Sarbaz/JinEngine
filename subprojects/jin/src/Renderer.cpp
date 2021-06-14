@@ -2,7 +2,7 @@
 #include "Application.h"
 #include "Logger.h"
 #include "Rect.h"
-#include "Time.h"
+#include "JinTime.h"
 
 #include <GL/glew.h>
 

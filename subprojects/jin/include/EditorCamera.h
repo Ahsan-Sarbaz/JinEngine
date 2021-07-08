@@ -28,8 +28,8 @@ private:
 public:
     EditorCamera();
     void ProcessKeyboard(CameraMovment direction);
-    void ProcessMouseMove(float xoffset, float yoffset, bool  constrainPitch = true);
-
+    void ProcessMouseMove(float xoffset, float yoffset, float zoffset, bool  constrainPitch = true);
+    void ResetCamera();
     glm::mat4 GetViewMatrix();
     glm::mat4 GetProjectionMatrix(float width, float height);
     inline glm::vec3 GetPosition() { return position; }

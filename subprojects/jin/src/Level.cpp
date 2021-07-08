@@ -1,8 +1,8 @@
 #include "Level.h"
 #include "Entity.h"
 
-Level::Level(const char* _name)
-    :name(_name)
+Level::Level(const char* _name , const std::filesystem::path& path)
+    :name(_name), assets_path(path)
 {
     root = new Entity(registry.create(), this);
     root->AddComponent<TagComponent>("root");

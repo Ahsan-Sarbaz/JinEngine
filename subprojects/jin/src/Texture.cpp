@@ -13,6 +13,7 @@ void Texture::InitFromFile(const char* path)
     if(!success)
     {
         LOG_ERROR("Failed to load texture %s\n", path);
+        return;
     }
     InitFromBuffer(buffer, width, height, channels);
     name = path;

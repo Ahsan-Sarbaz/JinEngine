@@ -1,5 +1,7 @@
 #pragma once
 #include "Jin.h"
+#include <filesystem>
+#include <unordered_map>
 
 class MainLayer : public Layer
 {
@@ -11,6 +13,11 @@ private:
     Entity* selectedEntity;
     u32 guizmoType;
     b8 guizmoUsed;
+    std::filesystem::path contentBrowserPath;
+    Texture* contentBrowserDirectoryIcon;
+    Texture* contentBrowserFileIcon;
+    std::unordered_map<std::string, Texture*> thumbnails;
+
 
 public:
     MainLayer();
@@ -21,7 +28,8 @@ public:
     inline void SetGuizmoType(u32 type) { if(!guizmoUsed) guizmoType = type; }
 
 private:
-  void ImGuiDrawLevelPanel();
-  void ImGuiDrawEntity(Entity* entity);
-  void ImGuiDrawComponentsPanel();
+    void ImGuiDrawLevelPanel();
+    void ImGuiDrawEntity(Entity* entity);
+    void ImGuiDrawComponentsPanel();
+    void ImGuiDrawContentBrowser();
 };

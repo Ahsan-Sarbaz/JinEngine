@@ -10,7 +10,6 @@ CubeMap::CubeMap(const char** path)
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-    i32 width, height;
 
     for (u32 i = 0; i < 6; i++)
     {

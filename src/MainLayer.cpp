@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imguizmo.h>
+#include <filesystem>
 
 MainLayer::MainLayer()
     :Layer("MainLayer")
@@ -64,7 +65,7 @@ MainLayer::MainLayer()
 
         lastX = e.data.x;
         lastY = e.data.y;
-        camera->ProcessMouseMove(xOffset, yOffset);
+       /// camera->ProcessMouseMove(xOffset, yOffset);
     };
 
     Application::AddEventListener(editorCameraMouseEventListener);
@@ -110,8 +111,17 @@ void MainLayer::OnStart()
     camera->SetPosition({0.0f,0.0f, 5.0f});
     skyMap = new CubeMap(skyPaths);
 
-    level = new Level("Main Level");
+    level = new Level("Main Level", "res");
     level->SetSkyBox(skyMap);
+
+    contentBrowserPath = level->GetAssetsPath();
+
+    contentBrowserDirectoryIcon = new Texture();
+    contentBrowserDirectoryIcon->InitFromFile("res/icons/cb/directory.png");
+
+    contentBrowserFileIcon = new Texture();
+    contentBrowserFileIcon->InitFromFile("res/icons/cb/file.png");
+
 
     Application::SetCurrentLevel(level);
 
@@ -124,6 +134,7 @@ void MainLayer::OnUpdate()
     auto lvl = Application::GetCurrentLevel();
     ImGuiDrawLevelPanel();
     ImGuiDrawComponentsPanel();
+    ImGuiDrawContentBrowser();
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("ViewPort", 0);
@@ -154,8 +165,6 @@ void MainLayer::OnUpdate()
     ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(m_ViewportBounds1.x, m_ViewportBounds1.y, m_ViewportBounds2.x - m_ViewportBounds1.x, m_ViewportBounds2.y - m_ViewportBounds1.y);
     ImGuizmo::Enable(false);
-    ImGuizmo::ViewManipulate(glm::value_ptr(cameraUboLayout.view), cameraUboLayout.position.z, {viewportOffset.x + viewportMaxRegion.x - 128 + 5, viewportOffset.y + 5}, {128, 128}, 0x10101010);
-
     Renderer::SetCameraUBOData(cameraUboLayout);
 
     if (selectedEntity && guizmoType != -1 && selectedEntity != lvl->GetRootEntity())
@@ -435,4 +444,72 @@ void MainLayer::ImGuiDrawComponentsPanel()
         ImGui::End();
     }
 }
+
+void MainLayer::ImGuiDrawContentBrowser()
+{
+    ImGui::Begin("Content Browser");
+
+    float width = ImGui::GetContentRegionAvail().x;
+    float padding = 8.0f;
+    float thumbnailSize = 128.0f;
+    float cellSize = padding + thumbnailSize;
+    int columnCount = (int)(width / cellSize);
+    if(columnCount < 1)
+        columnCount = 1;
+
+    if(contentBrowserPath != Application::GetCurrentLevel()->GetAssetsPath())
+    {
+        if(ImGui::Button("../"))
+        {
+            contentBrowserPath = contentBrowserPath.parent_path();
+        }
+    }
+    ImGui::Columns(columnCount, 0, false);
+
+    for(auto&& entry : std::filesystem::directory_iterator(contentBrowserPath))
+    {
+        const auto& path = entry.path();
+        auto relativePath = std::filesystem::relative(path, contentBrowserPath);
+        auto filenameString = relativePath.filename().string();
+
+        if(entry.is_directory())
+        {
+            ImGui::ImageButton((ImTextureID)contentBrowserDirectoryIcon->GetId(), {cellSize, cellSize});
+        }
+        else
+        {
+            if(entry.path().filename().extension() == ".png" ||
+                entry.path().filename().extension() == ".jpg" ||
+                entry.path().filename().extension() == ".jpeg" ||
+                entry.path().filename().extension() == ".bmp")
+            {
+                if(thumbnails.find(entry.path().string()) == thumbnails.end())
+                {
+                    thumbnails[entry.path().string()] = new Texture();
+                    thumbnails[entry.path().string()]->InitFromFile(entry.path().c_str());
+                }
+                ImGui::ImageButton((ImTextureID)thumbnails[entry.path().string()]->GetId(), {cellSize, cellSize});
+            }
+            else
+            {
+                ImGui::ImageButton((ImTextureID)contentBrowserFileIcon->GetId(), {cellSize, cellSize});
+            }
+        }
+
+        if(ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+        {
+            if(entry.is_directory())
+            {
+                contentBrowserPath /= path.filename();
+            }
+        }
+
+        ImGui::TextWrapped("%s", filenameString.c_str());
+        ImGui::NextColumn();
+    }
+
+    ImGui::Columns(1);
+    ImGui::End();
+}
+
 

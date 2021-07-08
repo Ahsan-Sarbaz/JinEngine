@@ -30,6 +30,7 @@ sources += 'src/CubeMap.cpp'
 sources += 'src/Material.cpp'
 sources += 'src/Level.cpp'
 sources += 'src/Framebuffer.cpp'
+sources += 'src/Input.cpp'
 
 glew_dep = dependency('glew')
 glfw_dep = dependency('glfw3')

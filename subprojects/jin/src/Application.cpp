@@ -33,8 +33,8 @@ static void glfw_window_framebuffer_resize(GLFWwindow* window, int width, int he
 
     Event e = {};
     e.type = EVENT_TYPE_WINDOW_RESIZE;
-    e.data.signed_int[0] = width;
-    e.data.signed_int[1] = height;
+    e.data.width = width;
+    e.data.height = height;
     app->AddEvent(e);
 }
 
@@ -42,7 +42,7 @@ static void glfw_key_callback(GLFWwindow* window, int key ,int scancode, int act
 {
     auto app = Application::GetInstance();
     Event e = {};
-    e.data.key_char = key;
+    e.data.key_code = key;
     e.data.key_mods = mod;
     if (action == GLFW_PRESS)
     {
@@ -65,8 +65,8 @@ static void glfw_cursor_pos_callback(GLFWwindow* window, double x, double y)
     auto app =  Application::GetInstance();
     Event e = {};
     e.type = EVENT_TYPE_MOUSE_MOVE;
-    e.data.real_double[0] = x;
-    e.data.real_double[1] = y;
+    e.data.mouse_x = x;
+    e.data.mouse_y = y;
     app->AddEvent(e);
 }
 
@@ -74,7 +74,7 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
 {
     auto app =  Application::GetInstance();
     Event e = {};
-    e.data.signed_int[0] = button;
+    e.data.mouse_button = button;
     if (action == GLFW_PRESS)
     {
         e.type = EVENT_TYPE_MOUSE_BUTTON_DOWN;
@@ -88,6 +88,14 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
         e.type = EVENT_TYPE_MOUSE_BUTTON_RELEASE;
     }    
 
+    app->AddEvent(e);
+}
+
+static void glfw_char_callback(GLFWwindow* window, unsigned int codepoint)
+{
+    auto app = Application::GetInstance();
+    Event e = {};
+    e.data.key_char = codepoint;
     app->AddEvent(e);
 }
 
@@ -129,7 +137,7 @@ Application::Application(const ApplicationConfiguration& _config)
     glfwSetKeyCallback(window->GetHandle(), glfw_key_callback);
     glfwSetCursorPosCallback(window->GetHandle(), glfw_cursor_pos_callback);
     glfwSetMouseButtonCallback(window->GetHandle(), glfw_mouse_button_callback);
-
+    glfwSetCharCallback(window->GetHandle(), glfw_char_callback);
     /// update the window size if the window creation changed it
     this->config.windowConfig.width = window->GetConfig()->width;
     this->config.windowConfig.height = window->GetConfig()->height;

@@ -5,6 +5,7 @@
 #include <imguizmo.h>
 #include <filesystem>
 
+
 MainLayer::MainLayer()
     :Layer("MainLayer")
 {
@@ -16,8 +17,11 @@ MainLayer::MainLayer()
     editorCameraKeyboardEventListener.callback = [](void* object, Event e){
         auto camera = (EditorCamera*)object;
         float last_speed = camera->GetMovementSpeed();
-        switch(e.data.key_char)
+        switch(e.data.key_code)
         {
+        case JIN_KEY_SPACE:
+            camera->ResetCamera();
+            break;
         case JIN_KEY_W:
         case JIN_KEY_UP:
             if(e.data.key_mods == JIN_MOD_SHIFT) camera->SetMovementSpeed(10.0f);
@@ -47,7 +51,7 @@ MainLayer::MainLayer()
     Application::AddEventListener(editorCameraKeyboardEventListener);
     EventListener editorCameraMouseEventListener = {};
     editorCameraMouseEventListener.object = camera;
-    editorCameraMouseEventListener.type = EVENT_TYPE_MOUSE_MOVE;
+    editorCameraMouseEventListener.type = EVENT_TYPE_MOUSE_MOVE | EVENT_TYPE_MOUSE_BUTTON_DOWN;
     editorCameraMouseEventListener.callback = [](void* object, Event e) {
         auto camera = (EditorCamera*)object;
         static bool firstMouse = true;
@@ -55,17 +59,22 @@ MainLayer::MainLayer()
         static float lastY = 0;
         if ( firstMouse )
         {
-            lastX = e.data.x;
-            lastY = e.data.y;
+            lastX = e.data.mouse_x;
+            lastY = e.data.mouse_y;
             firstMouse = false;
         }
 
-        float xOffset = e.data.x - lastX;
-        float yOffset = lastY - e.data.y;  // Reversed since y-coordinates go from bottom to left
+        float xOffset = e.data.mouse_x - lastX;
+        float yOffset = lastY - e.data.mouse_y;  // Reversed since y-coordinates go from bottom to left
+        float zOffset = 0;
 
-        lastX = e.data.x;
-        lastY = e.data.y;
-       /// camera->ProcessMouseMove(xOffset, yOffset);
+        lastX = e.data.mouse_x;
+        lastY = e.data.mouse_y;
+
+        if(Input::IsMouseButtonDown(1))
+        {
+            camera->ProcessMouseMove(xOffset, yOffset, zOffset);
+        }
     };
 
     Application::AddEventListener(editorCameraMouseEventListener);
@@ -75,7 +84,7 @@ MainLayer::MainLayer()
     mainLayerKeyboardEventsListener.object = this;
     mainLayerKeyboardEventsListener.callback = [](void* object, Event e) {
         auto mainLayer = (MainLayer*)object;
-        switch (e.data.key_char) {
+        switch (e.data.key_code) {
         case JIN_KEY_1:
             mainLayer->SetGuizmoType(-1);
             break;
@@ -164,7 +173,6 @@ void MainLayer::OnUpdate()
     ImGuizmo::SetOrthographic(false);
     ImGuizmo::SetDrawlist();
     ImGuizmo::SetRect(m_ViewportBounds1.x, m_ViewportBounds1.y, m_ViewportBounds2.x - m_ViewportBounds1.x, m_ViewportBounds2.y - m_ViewportBounds1.y);
-    ImGuizmo::Enable(false);
     Renderer::SetCameraUBOData(cameraUboLayout);
 
     if (selectedEntity && guizmoType != -1 && selectedEntity != lvl->GetRootEntity())

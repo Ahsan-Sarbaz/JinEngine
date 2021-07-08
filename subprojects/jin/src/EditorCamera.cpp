@@ -3,8 +3,21 @@
 #include "Application.h"
 
 EditorCamera::EditorCamera()
-    :position({0.0f, 0.0f,0.0f}), front({0.0f, 0.0f,-1.0f}), up({0.0f, 1.0f,0.0f}), worldUp(up), yaw(-90.0f), pitch(0.0f), movementSpeed(1.0f), mouseSensitivity(0.25f), zoom(40.0f)
 {
+    ResetCamera();
+}
+
+void EditorCamera::ResetCamera()
+{
+    position = glm::vec3(0.0f, 0.0f,0.0f);
+    front = glm::vec3(0.0f, 0.0f,-1.0f);
+    up = glm::vec3(0.0f, 1.0f,0.0f);
+    worldUp = up;
+    yaw = -90.0f;
+    pitch = 0.0f;
+    movementSpeed = 1.0f;
+    mouseSensitivity = 0.25f;
+    zoom = 40.0f;
     Update();
 }
 
@@ -33,13 +46,16 @@ void EditorCamera::ProcessKeyboard(CameraMovment direction)
     }
 }
 
-void EditorCamera::ProcessMouseMove(float xoffset, float yoffset, bool  constrainPitch)
+void EditorCamera::ProcessMouseMove(float xoffset, float yoffset, float zoffset, bool  constrainPitch)
 {
     xoffset *= mouseSensitivity;
     yoffset *= mouseSensitivity;
-    
-    yaw   += xoffset;
-    pitch += yoffset;
+    zoffset *= mouseSensitivity;
+
+//    yaw   += xoffset;
+//    pitch += yoffset;
+
+    position += glm::vec3(xoffset, yoffset, zoffset);
     
     // Make sure that when pitch is out of bounds, screen doesn't get flipped
     if ( constrainPitch )

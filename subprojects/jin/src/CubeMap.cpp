@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <stb_image.h>
 
-CubeMap::CubeMap(const char** path)
+CubeMap::CubeMap(const path path[])
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, id);
@@ -19,7 +19,7 @@ CubeMap::CubeMap(const char** path)
         auto success = ReadTextureToBuffer(path[i], &buffer, &size, &width, &height, &channels);
         if(!success)
         {
-            LOG_ERROR("Failed to read file %s\n", path[i]);
+            LOG_ERROR("Failed to read file %s\n", path[i].string().c_str());
             return;
         }
         GLenum internalFormat = 0;

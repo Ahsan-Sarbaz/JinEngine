@@ -27,3 +27,8 @@ typedef u8 b8;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 #define M_PI 3.141592
 #endif
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
+typedef fs::path path;

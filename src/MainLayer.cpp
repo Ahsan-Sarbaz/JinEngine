@@ -108,7 +108,7 @@ void MainLayer::OnStart()
      model = new Model("res/models/Car.dae");
 //     model = new Model(Mesh::CreateCubeMesh());
 
-    const char* skyPaths[6] = {
+    const path skyPaths[6] = {
         "res/textures/sky/posx.jpg",
         "res/textures/sky/negx.jpg",
         "res/textures/sky/posy.jpg",
@@ -166,7 +166,6 @@ void MainLayer::OnUpdate()
     cameraUboLayout.projection = camera->GetProjectionMatrix((float)avail.x, (float)avail.y);
     cameraUboLayout.view = camera->GetViewMatrix();
     cameraUboLayout.position = camera->GetPosition();
-
 
     ImGui::Image((ImTextureID)(u64)Application::GetInstance()->GetRenderTarget()->GetAttachmentId(0), avail, { 0,1 }, {1,0});
 
@@ -491,10 +490,11 @@ void MainLayer::ImGuiDrawContentBrowser()
                 entry.path().filename().extension() == ".jpeg" ||
                 entry.path().filename().extension() == ".bmp")
             {
-                if(thumbnails.find(entry.path().string()) == thumbnails.end())
+                std::string pathString = entry.path().string();
+                if(thumbnails.find(pathString) == thumbnails.end())
                 {
-                    thumbnails[entry.path().string()] = new Texture();
-                    thumbnails[entry.path().string()]->InitFromFile(entry.path().c_str());
+                    thumbnails[pathString ] = new Texture();
+                    thumbnails[pathString ]->InitFromFile(pathString.c_str());
                 }
                 ImGui::ImageButton((ImTextureID)thumbnails[entry.path().string()]->GetId(), {cellSize, cellSize});
             }

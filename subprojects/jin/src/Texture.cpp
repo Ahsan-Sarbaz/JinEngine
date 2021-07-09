@@ -4,7 +4,7 @@
 
 #include <GL/glew.h>
 
-void Texture::InitFromFile(const char* path)
+void Texture::InitFromFile(const path& path)
 {
     u8* buffer;
     i32 size = 0;
@@ -12,11 +12,11 @@ void Texture::InitFromFile(const char* path)
     auto success = ReadTextureToBuffer(path, &buffer, &size, &width, &height, &channels);
     if(!success)
     {
-        LOG_ERROR("Failed to load texture %s\n", path);
+        std::string pathString = path.string();
+        LOG_ERROR("Failed to load texture %s\n", pathString.c_str());
         return;
     }
     InitFromBuffer(buffer, width, height, channels);
-    name = path;
     FreeTextureBuffer(&buffer, size);
 }
 
@@ -25,7 +25,6 @@ void Texture::InitFromBuffer(unsigned char* buffer, i32 width, i32 height, i32 c
     width = width;
     height = height;
     channels = channels;
-    name = "May Be White";
 
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);

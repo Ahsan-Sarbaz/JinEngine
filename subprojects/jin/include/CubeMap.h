@@ -8,7 +8,7 @@ private:
 
 public:
     CubeMap() = default;
-    CubeMap(const char** path);
+    CubeMap(const path paths[]);
     void Bind();
     void Unbind();
     inline u32 GetId() { return id; }

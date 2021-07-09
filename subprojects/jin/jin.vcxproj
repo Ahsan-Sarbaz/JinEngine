@@ -93,6 +93,7 @@
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\Framebuffer.cpp" />
     <ClCompile Include="src\IndexBufferObject.cpp" />
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\IO.cpp" />
     <ClCompile Include="src\Layer.cpp" />
     <ClCompile Include="src\Level.cpp" />
@@ -124,6 +125,7 @@
     <ClInclude Include="include\Event.h" />
     <ClInclude Include="include\Framebuffer.h" />
     <ClInclude Include="include\IndexBufferObject.h" />
+    <ClInclude Include="include\Input.h" />
     <ClInclude Include="include\IO.h" />
     <ClInclude Include="include\Jin.h" />
     <ClInclude Include="include\KeyCodes.h" />
